@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { BrandMark } from './BrandMark'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Bot, Boxes, Bug, Coins, FileText, LayoutDashboard, Play, Plug, Search, Settings, Sparkles, Target, Upload } from 'lucide-react'
@@ -38,11 +39,9 @@ export function Layout() {
     <div className="flex h-full">
       <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-white/[0.07] bg-[#09090f] px-3 py-5 max-lg:w-16 max-lg:px-2">
         <Link to="/" title="BugLens AI — home" className="mb-8 flex items-center gap-3 rounded-sm px-2">
-          <div className="grid size-8 shrink-0 place-items-center rounded-sm bg-violet-500">
-            <Search className="size-4 text-white" strokeWidth={2.5} />
-          </div>
+          <BrandMark className="size-8" />
           <div className="max-lg:hidden">
-            <div className="text-[15px] font-semibold tracking-tight text-white">BugLens <span className="text-violet-300">AI</span></div>
+            <div className="text-[15px] font-semibold tracking-tight text-white">BugLens <span className="text-violet-400">AI</span></div>
             <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">Game QA platform</div>
           </div>
         </Link>

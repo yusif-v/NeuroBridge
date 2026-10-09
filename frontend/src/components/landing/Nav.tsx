@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { container, focusRing } from './primitives'
+import { BrandMark } from '../BrandMark'
 
 export const NAV = [
   { href: '#problem', label: 'Problem' },
@@ -16,7 +17,7 @@ export const NAV = [
 export function Logo() {
   return (
     <a href="#top" className={`flex items-center gap-2.5 rounded-sm ${focusRing}`} aria-label="BugLens AI, back to top">
-      <span aria-hidden className="grid size-7 place-items-center rounded-sm bg-violet-500 font-mono text-[13px] font-semibold text-white">B</span>
+      <BrandMark className="size-8" />
       <span className="text-[15px] font-semibold tracking-tight text-white">BugLens <span className="text-violet-400">AI</span></span>
     </a>
   )
