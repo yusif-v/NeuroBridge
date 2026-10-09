@@ -104,9 +104,28 @@ CREATE INDEX IF NOT EXISTS idx_logs_run ON logs(run_id);
 CREATE INDEX IF NOT EXISTS idx_logs_bug ON logs(bug_id);
 CREATE INDEX IF NOT EXISTS idx_att_bug ON attachments(bug_id);
 CREATE INDEX IF NOT EXISTS idx_rechecks_bug ON rechecks(bug_id);
+
+CREATE TABLE IF NOT EXISTS playtest_jobs (
+    id TEXT PRIMARY KEY,
+    run_id INTEGER NOT NULL REFERENCES runs(id),
+    filename TEXT NOT NULL,
+    entrypoint TEXT NOT NULL,
+    objective TEXT NOT NULL,
+    rule TEXT NOT NULL DEFAULT 'none',
+    budget INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'queued',
+    decision_count INTEGER NOT NULL DEFAULT 0,
+    latest_action TEXT,
+    latest_observation TEXT,
+    playtest_result TEXT,
+    error TEXT,
+    created_at TEXT NOT NULL,
+    started_at TEXT,
+    finished_at TEXT
+);
 """
 
-JSON_COLUMNS = {"stats", "metadata", "steps", "ai_report", "data"}
+JSON_COLUMNS = {"stats", "metadata", "steps", "ai_report", "data", "playtest_result"}
 
 
 def now() -> str:
@@ -124,6 +143,8 @@ def row_to_dict(row: sqlite3.Row | None) -> dict | None:
     for key in JSON_COLUMNS & out.keys():
         if out[key] is not None:
             out[key] = json.loads(out[key])
+    if "playtest_result" in out:
+        out["result"] = out.pop("playtest_result")
     return out
 
 

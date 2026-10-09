@@ -6,6 +6,35 @@ export type RunStatus = 'running' | 'completed' | 'failed'
 export type LogLevel = 'debug' | 'info' | 'warning' | 'error'
 export type ReportFormat = 'html' | 'md' | 'json' | 'csv'
 
+export interface SandboxCapabilities {
+  worker_online: boolean
+  sandbox_ready: boolean
+  gpu: string | null
+  model: string
+  formats: string[]
+  max_bytes: number
+  message: string
+}
+
+export interface Playtest {
+  id: string
+  run_id: number
+  filename: string
+  entrypoint: string
+  objective: string
+  status: 'queued' | 'starting' | 'playing' | 'verifying' | 'completed' | 'inconclusive' | 'environment_error' | 'cancelled'
+  budget: number
+  decision_count: number
+  latest_action: string | null
+  latest_observation: string | null
+  error: string | null
+  created_at: string
+  project?: string
+  build?: string
+  result: { summary?: string; confirmed_bugs?: number; bug_id?: number; coverage?: string; gpu?: string } | null
+  events?: LogRow[]
+}
+
 export interface AIReport {
   summary?: string
   severity?: Severity

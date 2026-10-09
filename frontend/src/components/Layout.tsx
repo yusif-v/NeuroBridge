@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Bot, Boxes, Bug, FileText, LayoutDashboard, Play, Plug, Search, Settings, Sparkles } from 'lucide-react'
+import { Bot, Boxes, Bug, FileText, LayoutDashboard, Play, Plug, Search, Settings, Sparkles, Upload } from 'lucide-react'
 import { api } from '../api'
 import { LIVE_MS, cn } from '../lib'
 import { LiveDot } from './ui'
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/playtest', label: 'Upload & Playtest', icon: Upload },
   { to: '/bugs', label: 'Bug Reports', icon: Bug },
   { to: '/runs', label: 'Test Runs', icon: Play },
   { to: '/builds', label: 'Builds', icon: Boxes },

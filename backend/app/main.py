@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import FRONTEND_DIST, MEDIA_DIR
 from .db import init_db
-from .routers import ingest, platform, reports
+from .routers import ingest, platform, reports, playtests
 
 
 @asynccontextmanager
@@ -23,6 +23,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allo
 app.include_router(ingest.router)
 app.include_router(platform.router)
 app.include_router(reports.router)
+app.include_router(playtests.router)
 
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
@@ -34,7 +35,7 @@ def health():
 
 
 # Serve the built frontend (npm run build) with SPA fallback.
-if FRONTEND_DIST.exists():
+if (FRONTEND_DIST / 'index.html').is_file() and (FRONTEND_DIST / 'assets').is_dir():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
 
     @app.get("/{path:path}", include_in_schema=False)

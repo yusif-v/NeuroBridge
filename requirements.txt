@@ -1,6 +1,7 @@
 fastapi>=0.121
 uvicorn[standard]
 pydantic
-python-multipart
+python-multipart>=0.0.20
 pytest
 httpx
+Pillow>=10

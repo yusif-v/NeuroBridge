@@ -1,0 +1,25 @@
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive DISPLAY=:99 WINEDEBUG=-all \
+    WINEPREFIX=/home/player/.wine LIBGL_ALWAYS_SOFTWARE=1
+RUN --mount=type=cache,id=buglens-apt,target=/var/cache/apt \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    wine wine64 xvfb xdotool openbox imagemagick tesseract-ocr python3 \
+    libgl1-mesa-dri fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
+RUN if id ubuntu >/dev/null 2>&1; then userdel ubuntu; fi; useradd -m -u 1000 player
+# Wine 9 shipped by Ubuntu crashes on Godot 4.6's VirtualProtect calls.
+# Extract the official x86_64 runtime; 32-bit uploads are rejected by the API.
+ARG WINE_RUNTIME_SOURCE=https://dl.winehq.org/wine-builds/ubuntu/pool/main/w/wine-staging/wine-staging_11.19~noble-1_amd64.deb
+ARG WINE_AMD64_SOURCE=https://dl.winehq.org/wine-builds/ubuntu/pool/main/w/wine-staging/wine-staging-amd64_11.19~noble-1_amd64.deb
+ADD ${WINE_RUNTIME_SOURCE} /tmp/wine-runtime.deb
+ADD ${WINE_AMD64_SOURCE} /tmp/wine-amd64.deb
+RUN echo 'b1add0731a690ef620b1481596b65932c10eda626568e94550a3354635819a90  /tmp/wine-runtime.deb' | sha256sum -c - \
+    && echo 'd9337036fd6b83309cae2d4110bef99252978eff76b07fc2de66cea23f769f19  /tmp/wine-amd64.deb' | sha256sum -c - \
+    && dpkg-deb -x /tmp/wine-runtime.deb / && dpkg-deb -x /tmp/wine-amd64.deb / \
+    && rm /tmp/wine-runtime.deb /tmp/wine-amd64.deb
+ENV PATH=/opt/wine-staging/bin:$PATH
+ENV HOME=/home/player
+COPY entrypoint.py control.py /opt/buglens/
+USER 1000:1000
+WORKDIR /game
+ENTRYPOINT ["python3", "/opt/buglens/entrypoint.py"]

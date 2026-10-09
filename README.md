@@ -6,6 +6,15 @@ gets an AI explanation, and produces reports.
 
 See [PLAN.md](PLAN.md) for the hackathon plan.
 
+## Upload a Linux game and let Laya test it
+
+Open **Upload & Playtest** (`/playtest`). Upload a native Linux x86_64 build ZIP,
+describe the goal and controls, and watch the real sandbox frames and CUDA model
+decisions. Findings are replayed in a fresh container before being confirmed.
+The prototype runs the game directly in offline Docker and uses local CUDA Laya
+for action choices. Windows EXEs require the optional Wine image.
+Setup, supported controls and coverage limits: [Build playtest guide](docs/BUILD_PLAYTEST.md).
+
 ## Quick start
 
 ```bash

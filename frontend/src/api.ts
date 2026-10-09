@@ -1,11 +1,11 @@
-import type { Bug, BugDetail, BugFilters, BugStatus, Build, Facets, ReportFormat, Run, RunDetail, Severity, Stats } from './types'
+import type { Bug, BugDetail, BugFilters, BugStatus, Build, Facets, ReportFormat, Run, RunDetail, Severity, Stats, Playtest, SandboxCapabilities } from './types'
 
 const BASE = '/api/v1'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(BASE + path, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
+    headers: { ...(init?.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...init?.headers },
   })
   if (!res.ok) {
     let detail = res.statusText
@@ -37,6 +37,11 @@ export const api = {
   runs: (limit = 100) => request<Run[]>(`/runs${qs({ limit })}`),
   run: (id: number) => request<RunDetail>(`/runs/${id}`),
   builds: () => request<Build[]>('/builds'),
+  sandbox: () => request<SandboxCapabilities>('/playtests/capabilities'),
+  playtests: () => request<Playtest[]>('/playtests'),
+  playtest: (id: string) => request<Playtest>(`/playtests/${id}`),
+  uploadBuild: (body: FormData) => request<Playtest>('/playtests', { method: 'POST', body }),
+  cancelPlaytest: (id: string) => request<Playtest>(`/playtests/${id}/cancel`, { method: 'POST' }),
 }
 
 export const reportUrl = {
