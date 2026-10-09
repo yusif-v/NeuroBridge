@@ -4,7 +4,7 @@ import { ExternalLink, FileCode2, FileJson, FileSpreadsheet, FileText } from 'lu
 import { api, reportUrl } from '../api'
 import { cn } from '../lib'
 import type { BugFilters, ReportFormat } from '../types'
-import { Card, Select } from '../components/ui'
+import { Card, PageHeader, Select } from '../components/ui'
 
 const FORMATS: { f: ReportFormat; label: string; hint: string; icon: typeof FileText; color: string }[] = [
   { f: 'html', label: 'HTML', hint: 'Self-contained, screenshots embedded, print to PDF', icon: FileCode2, color: 'text-violet-300' },
@@ -17,7 +17,7 @@ function FormatPicker({ value, onChange }: { value: ReportFormat; onChange: (f: 
   return (
     <div className="grid grid-cols-2 gap-2">
       {FORMATS.map(({ f, label, hint, icon: Icon, color }) => (
-        <button key={f} onClick={() => onChange(f)} className={cn('rounded-xl border p-3 text-left transition', value === f ? 'border-violet-400/40 bg-violet-500/10' : 'border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.04]')}>
+        <button key={f} onClick={() => onChange(f)} className={cn('rounded-md border p-3 text-left transition', value === f ? 'border-violet-400/40 bg-violet-500/10' : 'border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.04]')}>
           <div className="flex items-center gap-2 text-sm font-medium text-zinc-100"><Icon className={cn('size-4', color)} />{label}</div>
           <div className="mt-1 text-[11px] leading-4 text-zinc-500">{hint}</div>
         </button>
@@ -37,11 +37,9 @@ export function ReportsPage() {
   const set = (k: keyof BugFilters, v: string) => setFilters((f) => ({ ...f, [k]: v || undefined }))
 
   return (
-    <div className="mx-auto max-w-[1100px] space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Reports</h1>
-        <p className="mt-1 text-sm text-zinc-500">Export verified evidence for developers, producers, or the judges.</p>
-      </div>
+    <div className="mx-auto max-w-[1100px] space-y-8">
+      <PageHeader index="07" section="Exports" title="Reports"
+        lede="Export verified evidence for developers, producers, or the judges." />
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Run report">
           <div className="space-y-4">

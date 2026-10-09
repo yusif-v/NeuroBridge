@@ -44,7 +44,7 @@ function EvidenceTrail({ events }: { events: BugEvent[] }) {
             <div className="flex items-center gap-2 text-sm">
               <span className={cn('flex items-center gap-1.5 font-medium', ev.text)}>{ev.icon}{ev.label}</span>
               {e.build && <span className="rounded-md bg-white/[0.05] px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">{e.build}</span>}
-              {e.run_id && <Link to={`/runs/${e.run_id}`} className="text-xs text-violet-300 hover:underline">#{e.run_id}</Link>}
+              {e.run_id && <Link to={`/app/runs/${e.run_id}`} className="text-xs text-violet-300 hover:underline">#{e.run_id}</Link>}
               <span className="ml-auto shrink-0 text-xs text-zinc-500">{fmtDate(e.created_at)}</span>
             </div>
             {e.detail && <p className="mt-0.5 text-xs text-zinc-400">{e.detail}</p>}
@@ -71,7 +71,7 @@ function AICard({ bug, onRef, activeRef }: { bug: BugDetail; onRef: (ref: string
   const r = bug.ai_report
   const last = bug.ai_usage?.length ? bug.ai_usage[bug.ai_usage.length - 1] : null
   const wrap = (children: ReactNode) => (
-    <div className="mx-5 my-4 rounded-xl border border-violet-400/20 bg-gradient-to-br from-violet-500/[0.08] to-fuchsia-500/[0.03] p-4">
+    <div className="mx-5 my-4 rounded-md border border-violet-400/25 bg-violet-500/[0.04] p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold text-violet-200"><Sparkles className="size-4" />AI analysis</div>
         <span className="text-[11px] text-violet-300/70">hypothesis · not verified</span>
@@ -185,7 +185,7 @@ export function BugPanel({ bugId, onClose }: { bugId: number; onClose: () => voi
           <div className="px-5 pb-4 pt-5">
             <div className="flex items-center justify-between gap-2">
               <span className="font-mono text-xs text-violet-300">{bug.key}</span>
-              <button onClick={onClose} className="rounded-lg p-1 text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200"><X className="size-4" /></button>
+              <button onClick={onClose} className="rounded-md p-1 text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200"><X className="size-4" /></button>
             </div>
             <h2 className="mt-1 text-lg font-semibold leading-snug text-white">{bug.title}</h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -201,7 +201,7 @@ export function BugPanel({ bugId, onClose }: { bugId: number; onClose: () => voi
               )}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              {bug.last_run_id && <Link to={`/runs/${bug.last_run_id}`} className="btn"><ExternalLink className="size-3.5" />Open run</Link>}
+              {bug.last_run_id && <Link to={`/app/runs/${bug.last_run_id}`} className="btn"><ExternalLink className="size-3.5" />Open run</Link>}
               {bug.status === 'open' && <button className="btn-primary" disabled={update.isPending} onClick={() => update.mutate('ticketed')}><Ticket className="size-3.5" />Create ticket</button>}
               {bug.status === 'open' && <button className="btn" disabled={update.isPending} onClick={() => update.mutate('ignored')}><Ban className="size-3.5" />Ignore</button>}
               {(bug.status === 'open' || bug.status === 'ticketed') && (
@@ -216,14 +216,14 @@ export function BugPanel({ bugId, onClose }: { bugId: number; onClose: () => voi
           <div className="min-h-0 flex-1 overflow-y-auto">
             <Section title={`Screenshots (${bug.attachments.length})`}>
               {bug.attachments.length === 0 ? (
-                <div className="flex h-28 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-white/10 text-xs text-zinc-500"><ImageOff className="size-4" />No screenshots</div>
+                <div className="flex h-28 flex-col items-center justify-center gap-1 rounded-md border border-dashed border-white/10 text-xs text-zinc-500"><ImageOff className="size-4" />No screenshots</div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {bug.attachments.map((a, i) => (
                     <button key={a.id} onClick={() => setLightbox({ src: a.url, caption: a.caption })}
-                      className={cn('group relative overflow-hidden rounded-xl border border-white/10 bg-black/40', i === 0 && 'col-span-2')}>
+                      className={cn('group relative overflow-hidden rounded-md border border-white/10 bg-black/40', i === 0 && 'col-span-2')}>
                       <img src={a.url} alt={a.caption ?? ''} className={cn('w-full object-cover transition group-hover:scale-[1.02] [image-rendering:pixelated]', i === 0 ? 'h-44' : 'h-24')} />
-                      {a.caption && <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/80 to-transparent px-2 pb-1.5 pt-4 text-left text-[11px] text-zinc-300">{a.caption}</span>}
+                      {a.caption && <span className="absolute inset-x-0 bottom-0 truncate bg-black/75 px-2 py-1 text-left text-[11px] text-zinc-300">{a.caption}</span>}
                     </button>
                   ))}
                 </div>
@@ -234,8 +234,8 @@ export function BugPanel({ bugId, onClose }: { bugId: number; onClose: () => voi
 
             <Section title="Expected vs actual">
               <div className="space-y-2 text-sm">
-                <div className="rounded-xl border border-emerald-400/15 bg-emerald-500/[0.05] p-3"><div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-emerald-300"><CheckCircle2 className="size-3.5" />Expected</div><p className="text-zinc-300">{bug.expected ?? '—'}</p></div>
-                <div className="rounded-xl border border-rose-400/15 bg-rose-500/[0.05] p-3"><div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-rose-300"><XCircle className="size-3.5" />Actual</div><p className="text-zinc-300">{bug.actual ?? '—'}</p></div>
+                <div className="rounded-md border border-emerald-400/15 bg-emerald-500/[0.05] p-3"><div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-emerald-300"><CheckCircle2 className="size-3.5" />Expected</div><p className="text-zinc-300">{bug.expected ?? '—'}</p></div>
+                <div className="rounded-md border border-rose-400/15 bg-rose-500/[0.05] p-3"><div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-rose-300"><XCircle className="size-3.5" />Actual</div><p className="text-zinc-300">{bug.actual ?? '—'}</p></div>
               </div>
             </Section>
 
@@ -264,7 +264,7 @@ export function BugPanel({ bugId, onClose }: { bugId: number; onClose: () => voi
                       <div className="flex items-center gap-2 text-sm">
                         <span className={r.result === 'reproduced' ? 'text-emerald-300' : 'text-zinc-300'}>{r.result === 'reproduced' ? 'Reproduced' : 'Not reproduced'}</span>
                         {r.attempts != null && <span className="text-xs text-zinc-500">{r.attempts} attempt{r.attempts === 1 ? '' : 's'}</span>}
-                        {r.run_id && <Link to={`/runs/${r.run_id}`} className="text-xs text-violet-300 hover:underline">run #{r.run_id}</Link>}
+                        {r.run_id && <Link to={`/app/runs/${r.run_id}`} className="text-xs text-violet-300 hover:underline">run #{r.run_id}</Link>}
                         <span className="ml-auto text-xs text-zinc-500">{fmtDate(r.created_at)}</span>
                       </div>
                       {r.notes && <p className="mt-0.5 text-xs text-zinc-400">{r.notes}</p>}
@@ -276,7 +276,7 @@ export function BugPanel({ bugId, onClose }: { bugId: number; onClose: () => voi
 
             {bug.logs.length > 0 && (
               <Section title={`Logs (${bug.logs.length})`} right={activeRef && <button onClick={() => setActiveRef(null)} className="text-[11px] text-fuchsia-300 hover:underline">clear highlight</button>}>
-                <div ref={logsRef} className="max-h-64 overflow-auto rounded-xl border border-white/[0.06] bg-black/40 p-3 font-mono text-[11px] leading-5">
+                <div ref={logsRef} className="max-h-64 overflow-auto rounded-md border border-white/[0.06] bg-black/40 p-3 font-mono text-[11px] leading-5">
                   {bug.logs.map((l) => {
                     const hit = !!activeRef && matchesRef(l, activeRef)
                     return (
@@ -298,9 +298,9 @@ export function BugPanel({ bugId, onClose }: { bugId: number; onClose: () => voi
               <KV k="Agent" v={bug.agent} />
               <KV k="Engine confidence" v={bug.confidence != null ? `${Math.round(bug.confidence * 100)}%` : '—'} />
               <KV k="Seen" v={`${bug.occurrences}× in runs ${bug.runs.map((r) => `#${r.id}`).join(', ') || '—'}`} />
-              <KV k="First seen" v={bug.first_run_id ? <Link className="text-violet-300 hover:underline" to={`/runs/${bug.first_run_id}`}>run #{bug.first_run_id} · {fmtDate(bug.found_at)}</Link> : fmtDate(bug.found_at)} />
-              <KV k="Last seen" v={bug.last_run_id ? <Link className="text-violet-300 hover:underline" to={`/runs/${bug.last_run_id}`}>run #{bug.last_run_id}</Link> : '—'} />
-              {bug.fixed_in_run && <KV k="Fixed in" v={<Link className="text-emerald-300 hover:underline" to={`/runs/${bug.fixed_in_run}`}>run #{bug.fixed_in_run}</Link>} />}
+              <KV k="First seen" v={bug.first_run_id ? <Link className="text-violet-300 hover:underline" to={`/app/runs/${bug.first_run_id}`}>run #{bug.first_run_id} · {fmtDate(bug.found_at)}</Link> : fmtDate(bug.found_at)} />
+              <KV k="Last seen" v={bug.last_run_id ? <Link className="text-violet-300 hover:underline" to={`/app/runs/${bug.last_run_id}`}>run #{bug.last_run_id}</Link> : '—'} />
+              {bug.fixed_in_run && <KV k="Fixed in" v={<Link className="text-emerald-300 hover:underline" to={`/app/runs/${bug.fixed_in_run}`}>run #{bug.fixed_in_run}</Link>} />}
               <KV k="Fingerprint" v={<span className="font-mono text-xs text-zinc-400">{bug.fingerprint}</span>} />
               {bug.metadata && Object.entries(bug.metadata).map(([k, v]) => <KV key={k} k={k} v={typeof v === 'object' ? JSON.stringify(v) : String(v)} />)}
             </Section>

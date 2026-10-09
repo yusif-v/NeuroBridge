@@ -4,23 +4,16 @@ import { useQuery } from '@tanstack/react-query'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Bug, Calculator, Coins, Cpu, Info, Play, Sparkles, Timer } from 'lucide-react'
 import { api } from '../api'
-import { LIVE_MS, cn, compact, fmtDate, usd } from '../lib'
-import { Card, Empty, ErrorNote, Pill, Skeleton } from '../components/ui'
+import { LIVE_MS, compact, fmtDate, usd } from '../lib'
+import { Card, Empty, ErrorNote, PageHeader, Pill, Skeleton, StatCell, StatGrid } from '../components/ui'
 
 function Kpi({ label, value, sub, icon, accent }: { label: string; value: ReactNode; sub?: ReactNode; icon: ReactNode; accent: string }) {
-  return (
-    <div className="glass group relative overflow-hidden p-4">
-      <div className={cn('pointer-events-none absolute -right-8 -top-8 size-24 rounded-full opacity-25 blur-2xl transition group-hover:opacity-40', accent)} />
-      <div className="flex items-center justify-between"><span className="label">{label}</span><span className="text-zinc-500">{icon}</span></div>
-      <div className="mt-2 text-3xl font-semibold tabular-nums tracking-tight text-white">{value}</div>
-      {sub && <div className="mt-1 text-xs text-zinc-500">{sub}</div>}
-    </div>
-  )
+  return <StatCell label={label} value={value} sub={sub} icon={icon} accent={accent} />
 }
 
 function Note({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-start gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3 text-xs leading-relaxed text-zinc-400">
+    <div className="flex items-start gap-2 rounded-md border border-white/[0.07] px-4 py-3 text-xs leading-relaxed text-zinc-400">
       <Info className="mt-0.5 size-3.5 shrink-0 text-violet-300" /><div>{children}</div>
     </div>
   )
@@ -36,25 +29,23 @@ export function UsagePage() {
   const monthly = u?.unit.cost_per_run_usd != null ? u.unit.cost_per_run_usd * runs : null
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Usage &amp; cost</h1>
-        <p className="mt-1 text-sm text-zinc-500">Measured LLM spend: the engine playing the game, plus AI analysis of confirmed bugs.</p>
-      </div>
+    <div className="mx-auto max-w-[1400px] space-y-8">
+      <PageHeader index="06" section="Feasibility" title="Usage & cost"
+        lede="Measured LLM spend: the engine playing the game, plus AI analysis of confirmed bugs." />
 
       {error && <ErrorNote error={error} />}
       {isLoading && <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">{[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-28" />)}</div>}
 
       {u && (
         <>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <StatGrid className="grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
             <Kpi label="Total cost" value={usd(u.unit.total_cost_usd)} icon={<Coins className="size-4" />} accent="bg-violet-500" sub={`engine ${usd(u.engine.llm_cost_usd)} · AI ${usd(u.ai.cost_usd)}`} />
             <Kpi label="Per confirmed bug" value={usd(u.unit.cost_per_confirmed_bug_usd)} icon={<Bug className="size-4" />} accent="bg-emerald-500" sub={`${u.unit.confirmed_bugs} confirmed bugs`} />
             <Kpi label="Per run" value={usd(u.unit.cost_per_run_usd)} icon={<Play className="size-4" />} accent="bg-fuchsia-500" sub={`${u.engine.runs} runs · ${u.engine.play_minutes} min played`} />
             <Kpi label="AI calls" value={u.ai.calls} icon={<Sparkles className="size-4" />} accent="bg-sky-500" sub={`${u.ai.succeeded} ok · ${u.ai.failed} failed`} />
             <Kpi label="Avg AI latency" value={u.ai.avg_latency_ms != null ? `${(u.ai.avg_latency_ms / 1000).toFixed(1)}s` : '—'} icon={<Timer className="size-4" />} accent="bg-amber-500" sub={u.ai.cost_per_analysis_usd != null ? `${usd(u.ai.cost_per_analysis_usd)} / analysis` : 'per analysis'} />
             <Kpi label="Tokens" value={compact(totalTokens)} icon={<Cpu className="size-4" />} accent="bg-rose-500" sub={`engine ${compact(u.engine.llm_input_tokens + u.engine.llm_output_tokens)} · AI ${compact(u.ai.input_tokens + u.ai.output_tokens)}`} />
-          </div>
+          </StatGrid>
 
           {(u.ai.calls === 0 || (u.pricing.input_per_mtok_usd == null && u.ai.calls_without_cost > 0)) && (
             <div className="space-y-2">
@@ -65,7 +56,7 @@ export function UsagePage() {
             </div>
           )}
 
-          <div className="grid gap-4 xl:grid-cols-3">
+          <div className="grid gap-5 xl:grid-cols-3">
             <Card className="xl:col-span-2" title="Cost per run" action={<span className="text-xs text-zinc-500">USD</span>}>
               {chart.length === 0 ? <Empty icon={<Coins className="size-5" />} title="No runs yet" /> : (
                 <div className="h-64">
@@ -76,13 +67,13 @@ export function UsagePage() {
                       <YAxis tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v.toFixed(v < 0.1 ? 3 : 2)}`} />
                       <Tooltip
                         cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                        contentStyle={{ background: '#14121f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12 }}
+                        contentStyle={{ background: '#14121f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, fontSize: 12 }}
                         labelFormatter={(l, p) => `Run ${l}${p?.[0] ? ` · build ${p[0].payload.build}` : ''}`}
                         formatter={(v) => usd(Number(v))}
                       />
                       <Legend wrapperStyle={{ fontSize: 12, color: '#a1a1aa' }} iconType="circle" iconSize={8} />
                       <Bar isAnimationActive={false} maxBarSize={56} dataKey="engine" name="Engine LLM" stackId="c" fill="#a78bfa" />
-                      <Bar isAnimationActive={false} maxBarSize={56} dataKey="ai" name="AI analysis" stackId="c" fill="#e879f9" radius={[6, 6, 0, 0]} />
+                      <Bar isAnimationActive={false} maxBarSize={56} dataKey="ai" name="AI analysis" stackId="c" fill="#e879f9" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -106,7 +97,7 @@ export function UsagePage() {
             </Card>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-3">
+          <div className="grid gap-5 xl:grid-cols-3">
             <Card title="By model">
               {u.by_model.length === 0 ? <Empty title="No AI calls yet" /> : (
                 <div className="-mx-5 overflow-x-auto">
@@ -129,7 +120,7 @@ export function UsagePage() {
                     <tbody className="divide-y divide-white/[0.04] tabular-nums">
                       {u.recent_calls.map((c) => (
                         <tr key={c.id} className="hover:bg-white/[0.02]">
-                          <td className="max-w-64 px-5 py-2.5">{c.bug_id ? <Link to={`/bugs?bug=${c.bug_id}`} className="block truncate text-zinc-200 hover:text-violet-200"><span className="mr-2 font-mono text-xs text-violet-300">BUG-{String(c.bug_id).padStart(3, '0')}</span>{c.title}</Link> : '—'}</td>
+                          <td className="max-w-64 px-5 py-2.5">{c.bug_id ? <Link to={`/app/bugs?bug=${c.bug_id}`} className="block truncate text-zinc-200 hover:text-violet-200"><span className="mr-2 font-mono text-xs text-violet-300">BUG-{String(c.bug_id).padStart(3, '0')}</span>{c.title}</Link> : '—'}</td>
                           <td className="px-3 py-2.5 text-zinc-400">{c.model ?? '—'}</td>
                           <td className="px-3 py-2.5 text-right text-zinc-400">{c.input_tokens != null ? `${compact(c.input_tokens)} / ${compact(c.output_tokens)}` : '—'}</td>
                           <td className="px-3 py-2.5 text-right text-zinc-200">{usd(c.cost_usd)}</td>

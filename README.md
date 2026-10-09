@@ -14,7 +14,7 @@ uv venv && uv pip install -r requirements.txt     # or: python -m venv .venv && 
 cp .env.example .env
 .venv/bin/uvicorn backend.app.main:app --reload --env-file .env
 
-# Frontend (http://localhost:5173, proxies /api and /media to :8000)
+# Frontend (http://localhost:5173 — landing page at /, platform at /app; proxies /api and /media to :8000)
 cd frontend && npm install && npm run dev
 
 # Fill the platform with demo data (no real engine needed)

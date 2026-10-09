@@ -22,7 +22,7 @@ const FILTERS: { key: keyof Facets; label: string; render?: (v: string) => strin
 
 const COLUMNS = ['ID', 'Title', 'Severity', 'Category', 'Status', 'Verification', 'Project', 'Build', 'Test', 'Agent', 'Conf.', 'Seen', 'Found']
 // Hidden while the side panel is open so the table doesn't need horizontal scroll.
-const WIDE_ONLY = ['Project', 'Test', 'Agent', 'Seen']
+const WIDE_ONLY = ['Category', 'Project', 'Test', 'Agent', 'Seen', 'Found']
 
 export function BugsPage() {
   const [params, setParams] = useSearchParams()
@@ -64,11 +64,11 @@ export function BugsPage() {
 
   return (
     <div className="mx-auto flex max-w-[1800px] gap-5">
-      <div className="min-w-0 flex-1 space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0 flex-1 space-y-6">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 border-b border-white/[0.07] pb-7">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-white">Bug Reports</h1>
-            <p className="mt-1 text-sm text-zinc-500">Findings pushed by the engine, deduplicated and verified by recheck.</p>
+            <div className="eyebrow mb-3"><span className="text-violet-300">02</span> <span className="text-zinc-600">—</span> Findings</div><h1 className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-white sm:text-5xl">Bug Reports</h1>
+            <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-400">Findings pushed by the engine, deduplicated and verified by recheck.</p>
           </div>
           <div className="flex items-center gap-2">
             <button className={cn('btn', sort === 'severity' && 'border-violet-400/30 text-violet-200')} onClick={() => setParam('sort', sort === 'severity' ? null : 'severity')}>
@@ -104,7 +104,7 @@ export function BugsPage() {
 
         <div className="glass overflow-hidden">
           <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
-            <span className="text-sm font-semibold text-zinc-200">All bugs</span>
+            <span className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-400">All bugs</span>
             <span className="text-xs tabular-nums text-zinc-500">{bugs.data ? `${bugs.data.length} result${bugs.data.length === 1 ? '' : 's'}` : ''}</span>
           </div>
           <div className="overflow-x-auto">
@@ -118,11 +118,11 @@ export function BugsPage() {
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
                 {bugs.isLoading && Array.from({ length: 6 }).map((_, i) => (
-                  <tr key={i}><td colSpan={selected ? 9 : 13} className="px-5 py-3"><Skeleton className="h-6 w-full" /></td></tr>
+                  <tr key={i}><td colSpan={selected ? 7 : 13} className="px-5 py-3"><Skeleton className="h-6 w-full" /></td></tr>
                 ))}
                 {bugs.data?.map((b) => (
                   <tr key={b.id} onClick={() => setParam('bug', selected === b.id ? null : String(b.id))}
-                    className={cn('cursor-pointer transition', selected === b.id ? 'bg-violet-500/[0.09] shadow-[inset_2px_0_0_0_#a78bfa]' : 'hover:bg-white/[0.025]')}>
+                    className={cn('cursor-pointer transition', selected === b.id ? 'bg-violet-500/[0.07] shadow-[inset_2px_0_0_0_#a78bfa]' : 'hover:bg-white/[0.025]')}>
                     <td className="whitespace-nowrap py-3 pl-5 pr-3 font-mono text-xs text-violet-300">{b.key}</td>
                     <td className="max-w-[320px] px-3 py-3">
                       <div className="flex items-center gap-2">
@@ -131,7 +131,7 @@ export function BugsPage() {
                       </div>
                     </td>
                     <td className="px-3 py-3"><SeverityBadge severity={b.severity} /></td>
-                    <td className="whitespace-nowrap px-3 py-3 capitalize text-zinc-300">{b.category ?? '—'}</td>
+                    {!selected && <td className="whitespace-nowrap px-3 py-3 capitalize text-zinc-300">{b.category ?? '—'}</td>}
                     <td className="px-3 py-3"><StatusBadge status={b.status} /></td>
                     <td className="px-3 py-3"><VerificationBadge v={b.verification} /></td>
                     {!selected && <td className="whitespace-nowrap px-3 py-3 text-zinc-300">{b.project}</td>}
@@ -140,7 +140,7 @@ export function BugsPage() {
                     {!selected && <td className="whitespace-nowrap px-3 py-3 text-zinc-400">{b.agent ?? '—'}</td>}
                     <td className="whitespace-nowrap px-3 py-3 tabular-nums text-zinc-300">{b.confidence != null ? `${Math.round(b.confidence * 100)}%` : '—'}</td>
                     {!selected && <td className="px-3 py-3 tabular-nums text-zinc-400">{b.occurrences}×</td>}
-                    <td className="whitespace-nowrap py-3 pl-3 pr-5 text-xs text-zinc-500">{fmtDate(b.found_at, false)}</td>
+                    {!selected && <td className="whitespace-nowrap py-3 pl-3 pr-5 text-xs text-zinc-500">{fmtDate(b.found_at, false)}</td>}
                   </tr>
                 ))}
               </tbody>

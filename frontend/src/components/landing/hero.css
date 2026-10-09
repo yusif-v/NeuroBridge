@@ -1,0 +1,16 @@
+/* Staggered entrance for the hero; disabled for reduced motion. */
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.hero-rise {
+  opacity: 0;
+  animation: hero-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes hero-fade { from { opacity: 0; } to { opacity: 1; } }
+.hero-fade { animation: hero-fade 1.6s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise, .hero-fade { opacity: 1; animation: none; filter: none; transform: none; }
+}

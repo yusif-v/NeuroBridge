@@ -5,7 +5,7 @@ import { cn } from '../lib'
 
 export function Pill({ className, children, title }: { className?: string; children: ReactNode; title?: string }) {
   return (
-    <span title={title} className={cn('inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium leading-4', className)}>
+    <span title={title} className={cn('inline-flex items-center gap-1 whitespace-nowrap rounded-sm border px-1.5 py-0.5 text-[11px] font-medium leading-4', className)}>
       {children}
     </span>
   )
@@ -78,7 +78,7 @@ export const LEVEL_STYLE: Record<LogLevel, string> = {
 
 export function LiveDot({ label = 'Live' }: { label?: string }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
+    <span className="inline-flex items-center gap-2 rounded-sm border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
       <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex size-2 rounded-full bg-emerald-400" /></span>
       {label}
     </span>
@@ -89,8 +89,8 @@ export function Card({ className, children, title, action }: { className?: strin
   return (
     <section className={cn('glass p-5', className)}>
       {(title || action) && (
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-zinc-200">{title}</h2>
+        <div className="-mx-5 -mt-5 mb-5 flex min-h-12 items-center justify-between gap-3 border-b border-white/[0.07] px-5 py-3">
+          <h2 className="flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-400">{title}</h2>
           {action}
         </div>
       )}
@@ -99,14 +99,38 @@ export function Card({ className, children, title, action }: { className?: strin
   )
 }
 
+/** Editorial page header: numbered mono eyebrow, oversized title, short lede, optional actions. */
+export function PageHeader({ index, section, title, lede, actions, meta }: {
+  index: string
+  section: string
+  title: ReactNode
+  lede?: ReactNode
+  actions?: ReactNode
+  meta?: ReactNode
+}) {
+  return (
+    <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 border-b border-white/[0.07] pb-7">
+      <div className="min-w-0 max-w-3xl">
+        <div className="eyebrow mb-3"><span className="text-violet-300">{index}</span> <span className="text-zinc-600">—</span> {section}</div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-white sm:text-5xl">{title}</h1>
+          {meta}
+        </div>
+        {lede && <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-400">{lede}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </header>
+  )
+}
+
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('shimmer rounded-lg', className)} />
+  return <div className={cn('shimmer rounded-sm', className)} />
 }
 
 export function Empty({ icon, title, hint }: { icon?: ReactNode; title: string; hint?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-14 text-center">
-      {icon && <div className="mb-1 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3 text-zinc-500">{icon}</div>}
+      {icon && <div className="mb-1 rounded-md border border-white/[0.07] p-3 text-zinc-500">{icon}</div>}
       <div className="text-sm font-medium text-zinc-300">{title}</div>
       {hint && <div className="max-w-sm text-xs text-zinc-500">{hint}</div>}
     </div>
@@ -115,7 +139,7 @@ export function Empty({ icon, title, hint }: { icon?: ReactNode; title: string; 
 
 export function ErrorNote({ error }: { error: unknown }) {
   return (
-    <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+    <div className="rounded-md border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
       {error instanceof Error ? error.message : 'Something went wrong'} — is the backend running on :8000?
     </div>
   )
@@ -130,10 +154,11 @@ export function Select({ label, value, options, onChange, render }: {
 }) {
   return (
     <label className="relative block">
+      <span className="sr-only">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={cn('input appearance-none pr-8', value ? 'text-zinc-100 border-violet-500/30 bg-violet-500/[0.06]' : 'text-zinc-400')}
+        className={cn('input appearance-none pr-8', value ? 'text-zinc-100 border-violet-400/50' : 'text-zinc-400')}
       >
         <option value="">{label}</option>
         {options.map((o) => (
@@ -158,7 +183,7 @@ export function Menu({ button, children }: { button: ReactNode; children: (close
     <div ref={ref} className="relative">
       <div onClick={() => setOpen((o) => !o)}>{button}</div>
       {open && (
-        <div className="animate-fade-in absolute right-0 z-30 mt-2 min-w-48 overflow-hidden rounded-xl border border-white/10 bg-[#14121f]/95 p-1 shadow-2xl shadow-black/60 backdrop-blur-xl">
+        <div className="animate-fade-in absolute right-0 z-30 mt-2 min-w-48 overflow-hidden rounded-md border border-white/10 bg-[#11111a] p-1 shadow-xl shadow-black/50">
           {children(() => setOpen(false))}
         </div>
       )}
@@ -167,7 +192,7 @@ export function Menu({ button, children }: { button: ReactNode; children: (close
 }
 
 export function MenuItem({ children, onClick, href }: { children: ReactNode; onClick?: () => void; href?: string }) {
-  const cls = 'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-zinc-300 hover:bg-white/[0.06] hover:text-white'
+  const cls = 'flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm text-zinc-300 hover:bg-white/[0.06] hover:text-white'
   return href
     ? <a className={cls} href={href} target="_blank" rel="noreferrer" onClick={onClick}>{children}</a>
     : <button className={cls} onClick={onClick}>{children}</button>
@@ -180,10 +205,10 @@ export function Lightbox({ src, caption, onClose }: { src: string; caption?: str
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-8 backdrop-blur-sm" onClick={onClose}>
-      <button className="btn absolute right-6 top-6" onClick={onClose}><X className="size-4" /></button>
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-8" onClick={onClose}>
+      <button className="btn absolute right-6 top-6" onClick={onClose} aria-label="Close preview"><X className="size-4" /></button>
       <figure className="max-h-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
-        <img src={src} className="max-h-[80vh] rounded-xl border border-white/10 object-contain [image-rendering:pixelated]" />
+        <img src={src} className="max-h-[80vh] rounded-md border border-white/10 object-contain [image-rendering:pixelated]" />
         {caption && <figcaption className="mt-3 text-center text-sm text-zinc-400">{caption}</figcaption>}
       </figure>
     </div>
@@ -195,6 +220,34 @@ export function KV({ k, v }: { k: string; v: ReactNode }) {
     <div className="flex items-start justify-between gap-4 py-1.5 text-sm">
       <span className="shrink-0 text-zinc-500">{k}</span>
       <span className="min-w-0 truncate text-right text-zinc-200">{v ?? '—'}</span>
+    </div>
+  )
+}
+
+/** Hairline-divided grid of stat cells (cells share 1px dividers instead of separate cards). */
+export function StatGrid({ className, children }: { className?: string; children: ReactNode }) {
+  return <div className={cn('grid gap-px overflow-hidden rounded-md border border-white/[0.07] bg-white/[0.07]', className)}>{children}</div>
+}
+
+export function StatCell({ label, value, sub, icon, accent, big, className }: {
+  label: string
+  value: ReactNode
+  sub?: ReactNode
+  icon?: ReactNode
+  accent?: string
+  big?: boolean
+  className?: string
+}) {
+  return (
+    <div className={cn('flex min-w-0 flex-col bg-[#11111a] p-4 sm:p-5', className)}>
+      <div className="flex items-start justify-between gap-2">
+        <span className="flex min-w-0 items-baseline gap-2 font-mono text-[10px] uppercase leading-4 tracking-[0.1em] text-zinc-500 sm:text-[11px] sm:tracking-[0.12em]">
+          {accent && <span className={cn('size-1.5 shrink-0 -translate-y-px', accent)} />}{label}
+        </span>
+        {icon && <span className="shrink-0 text-zinc-600 max-sm:hidden">{icon}</span>}
+      </div>
+      <div className={cn('mt-5 font-semibold tabular-nums tracking-[-0.03em] text-white', big ? 'text-4xl sm:text-5xl' : 'text-3xl sm:text-4xl')}>{value}</div>
+      {sub && <div className="mt-2 text-xs leading-relaxed text-zinc-500">{sub}</div>}
     </div>
   )
 }

@@ -26,18 +26,19 @@ export function RunDetailPage() {
   const r = run.data
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5">
-      <Link to="/runs" className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300"><ArrowLeft className="size-4" />All runs</Link>
+    <div className="mx-auto max-w-[1400px] space-y-6">
+      <Link to="/app/runs" className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300"><ArrowLeft className="size-4" />All runs</Link>
 
       {!r ? <Skeleton className="h-40" /> : (
         <>
-          <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 border-b border-white/[0.07] pb-7">
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-semibold tracking-tight text-white">Run #{r.id}</h1>
+              <div className="eyebrow mb-3"><span className="text-violet-300">03</span> <span className="text-zinc-600">—</span> Test run</div>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-white sm:text-5xl">Run #{r.id}</h1>
                 <RunStatusBadge status={r.status} />
               </div>
-              <p className="mt-1 text-sm text-zinc-500">{r.project} · build <span className="font-mono text-zinc-400">{r.build}</span>{r.agent && <> · agent {r.agent}</>}</p>
+              <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-400">{r.project} · build <span className="font-mono text-zinc-400">{r.build}</span>{r.agent && <> · agent {r.agent}</>}</p>
             </div>
             <Menu button={<button className="btn-primary"><Download className="size-4" />Export report</button>}>
               {(close) => (
@@ -75,11 +76,11 @@ export function RunDetailPage() {
             {r.bugs.length === 0 ? <Empty icon={<Bug className="size-5" />} title="No bugs in this run" /> : (
               <div className="-mx-2 divide-y divide-white/[0.05]">
                 {r.bugs.map((b) => (
-                  <Link key={b.id} to={`/bugs?bug=${b.id}&run=${r.id}`} className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition hover:bg-white/[0.03]">
+                  <Link key={b.id} to={`/app/bugs?bug=${b.id}&run=${r.id}`} className="flex items-center gap-3 rounded-md px-2 py-2.5 transition hover:bg-white/[0.03]">
                     {b.thumbnail ? <img src={b.thumbnail} className="h-9 w-14 shrink-0 rounded-md border border-white/10 object-cover [image-rendering:pixelated]" /> : <div className="h-9 w-14 shrink-0 rounded-md border border-dashed border-white/10" />}
                     <span className="w-16 shrink-0 font-mono text-xs text-violet-300">{b.key}</span>
                     <span className="min-w-0 flex-1 truncate text-sm text-zinc-200">{b.title}</span>
-                    {b.first_run_id === r.id && <span className="rounded-full bg-fuchsia-500/15 px-2 py-0.5 text-[11px] text-fuchsia-300">new</span>}
+                    {b.first_run_id === r.id && <span className="rounded-sm border border-fuchsia-400/30 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-fuchsia-300">new</span>}
                     {!!b.regression && <RegressionBadge />}
                     <VerificationBadge v={b.verification} />
                     <StatusBadge status={b.status} />
@@ -93,7 +94,7 @@ export function RunDetailPage() {
           <Card
             title={<span className="flex items-center gap-2"><ScrollText className="size-4 text-zinc-400" />Event log ({logs.length})</span>}
             action={
-              <div className="flex gap-1 rounded-lg border border-white/[0.07] p-0.5">
+              <div className="flex gap-1 rounded-md border border-white/[0.07] p-0.5">
                 {LEVELS.map((l) => (
                   <button key={l} onClick={() => setMinLevel(l)} className={cn('rounded-md px-2 py-1 text-xs capitalize transition', minLevel === l ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-zinc-300')}>{l === 'debug' ? 'all' : `${l}+`}</button>
                 ))}
@@ -101,12 +102,12 @@ export function RunDetailPage() {
             }
           >
             {logs.length === 0 ? <p className="text-sm text-zinc-500">No log entries.</p> : (
-              <div className="max-h-[480px] overflow-auto rounded-xl border border-white/[0.06] bg-black/40 p-3 font-mono text-xs leading-6">
+              <div className="max-h-[480px] overflow-auto rounded-md border border-white/[0.06] bg-black/40 p-3 font-mono text-xs leading-6">
                 {logs.map((l) => (
                   <div key={l.id} className="flex gap-3 rounded px-1 hover:bg-white/[0.03]">
                     <span className="shrink-0 text-zinc-600">{fmtTime(l.ts)}</span>
                     <span className={cn('w-14 shrink-0 uppercase', LEVEL_STYLE[l.level])}>{l.level}</span>
-                    {l.bug_id ? <Link to={`/bugs?bug=${l.bug_id}`} className="shrink-0 text-violet-300 hover:underline">BUG-{String(l.bug_id).padStart(3, '0')}</Link> : <span className="w-[60px] shrink-0" />}
+                    {l.bug_id ? <Link to={`/app/bugs?bug=${l.bug_id}`} className="shrink-0 text-violet-300 hover:underline">BUG-{String(l.bug_id).padStart(3, '0')}</Link> : <span className="w-[60px] shrink-0" />}
                     <span className="whitespace-pre-wrap break-words text-zinc-300">{l.message}{l.data && <span className="text-zinc-500"> {JSON.stringify(l.data)}</span>}</span>
                   </div>
                 ))}

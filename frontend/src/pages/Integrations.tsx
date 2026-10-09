@@ -16,7 +16,7 @@ function Code({ code, lang }: { code: string; lang: string }) {
     } catch { /* clipboard blocked */ }
   }
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-white/[0.07] bg-black/40">
+    <div className="group relative overflow-hidden rounded-md border border-white/[0.07] bg-black/40">
       <div className="flex items-center justify-between border-b border-white/[0.05] px-3 py-1.5">
         <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-zinc-500">{lang}</span>
         <button onClick={copy} className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200">
@@ -31,7 +31,7 @@ function Code({ code, lang }: { code: string; lang: string }) {
 function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
     <div className="relative pl-10">
-      <span className="absolute left-0 top-0 grid size-7 place-items-center rounded-lg bg-gradient-to-br from-violet-500/30 to-fuchsia-500/20 text-sm font-semibold text-violet-100 ring-1 ring-inset ring-violet-400/30">{n}</span>
+      <span className="absolute left-0 top-0 grid size-7 place-items-center rounded-sm border border-violet-400/40 font-mono text-xs font-semibold text-violet-200">{String(n).padStart(2, '0')}</span>
       <h3 className="pt-0.5 text-sm font-semibold text-zinc-100">{title}</h3>
       <div className="mt-2 space-y-3 text-sm text-zinc-400">{children}</div>
     </div>
@@ -128,7 +128,7 @@ function FieldTable({ title, rows }: { title: string; rows: [string, boolean, st
   return (
     <div>
       <div className="label mb-2">{title}</div>
-      <div className="overflow-hidden rounded-xl border border-white/[0.06]">
+      <div className="overflow-hidden rounded-md border border-white/[0.06]">
         <table className="w-full text-sm">
           <tbody className="divide-y divide-white/[0.04]">
             {rows.map(([f, req, why]) => (
@@ -147,11 +147,11 @@ function FieldTable({ title, rows }: { title: string; rows: [string, boolean, st
 
 export function IntegrationsPage() {
   return (
-    <div className="mx-auto max-w-[1100px] space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto max-w-[1100px] space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 border-b border-white/[0.07] pb-7">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Integrations</h1>
-          <p className="mt-1 text-sm text-zinc-500">Any game engine can report to BugLens over HTTP. Python engines can use the SDK, which needs only the standard library.</p>
+          <div className="eyebrow mb-3"><span className="text-violet-300">08</span> <span className="text-zinc-600">—</span> Connect</div><h1 className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-white sm:text-5xl">Integrations</h1>
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-400">Any game engine can report to BugLens over HTTP. Python engines can use the SDK, which needs only the standard library.</p>
         </div>
         <a href={API_DOCS} target="_blank" rel="noreferrer" className="btn"><ExternalLink className="size-4" />API reference</a>
       </div>
