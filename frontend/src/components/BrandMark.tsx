@@ -1,0 +1,13 @@
+/** BugLens mark: a viewfinder framing a bug — the bug, captured as evidence. Keep in sync with public/favicon.svg. */
+export function BrandMark({ className = 'size-8' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden className={`shrink-0 ${className}`}>
+      <rect width="32" height="32" rx="6" fill="#8B5CF6" />
+      <path d="M6 11V7.5C6 6.67 6.67 6 7.5 6H11M21 6h3.5c.83 0 1.5.67 1.5 1.5V11M26 21v3.5c0 .83-.67 1.5-1.5 1.5H21M11 26H7.5C6.67 26 6 25.33 6 24.5V21" stroke="#fff" strokeWidth="2.2" />
+      <path d="M13.9 11.4 12.8 9.6M18.1 11.4l1.1-1.8" stroke="#fff" strokeWidth="1.6" />
+      <path d="M16 11.2c-2.6 0-4.4 2.2-4.4 5.6s1.8 5.4 4.4 5.4 4.4-2 4.4-5.4-1.8-5.6-4.4-5.6Z" fill="#fff" />
+      <path d="M16 13.6v8.4" stroke="#8B5CF6" strokeWidth="1.3" />
+      <path d="M11.6 15.4H9.8M11.6 18.6H9.8M20.4 15.4h1.8M20.4 18.6h1.8" stroke="#fff" strokeWidth="1.6" />
+    </svg>
+  )
+}
