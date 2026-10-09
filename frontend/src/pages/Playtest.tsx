@@ -49,6 +49,7 @@ export function PlaytestPage() {
   const events = current?.events ?? []
   const latestDecision = events.find(e => e.data?.probabilities)
   const probabilities = latestDecision?.data?.probabilities as Record<string, number> | undefined
+  const observedFinding = events.find(e => e.data?.finding)?.data?.finding as { title?: string; category?: string } | undefined
   const done = current ? [true, current.decision_count > 0, current.decision_count > 0, !!current.result?.bug_id, !!current.result] : []
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
@@ -75,7 +76,7 @@ export function PlaytestPage() {
           <label className="block text-xs text-zinc-400">Goal and controls<textarea className="input mt-1 min-h-24" maxLength={3000} value={objective} onChange={e => setObjective(e.target.value)} placeholder="What should the player do? A/D to move, Space to jump, E to interact…" /></label>
           <label className="block text-xs text-zinc-400">Executable path inside ZIP <span className="text-zinc-600">(if multiple)</span><input className="input mt-1" value={entrypoint} onChange={e => setEntrypoint(e.target.value)} placeholder="Game/MyGame.x86_64" /></label>
           <div className="grid grid-cols-2 gap-3"><label className="text-xs text-zinc-400">Decision budget<input className="input mt-1" type="number" min={5} max={300} value={budget} onChange={e => setBudget(Number(e.target.value))} /></label>
-            <label className="text-xs text-zinc-400">Gameplay assertion<select className="input mt-1" value={rule} onChange={e => setRule(e.target.value)}><option value="none">Runtime errors</option><option value="key-gated-exit">Key required for exit</option></select></label></div>
+            <label className="text-xs text-zinc-400">Gameplay assertion<select aria-label="Gameplay assertion" className="input mt-1" value={rule} onChange={e => setRule(e.target.value)}><option value="none">Runtime errors</option><option value="key-gated-exit">Key required for exit</option></select></label></div>
           {rule === 'key-gated-exit' && <p className="text-xs leading-relaxed text-zinc-400">For builds displaying “KEY MISSING” and “DUNGEON CLEARED”. Seeing both in one frame violates the rule.</p>}
           {validation && <p className="text-sm text-red-300" role="alert">{validation}</p>}{upload.error && <ErrorNote error={upload.error} />}
           <button type="submit" disabled={upload.isPending || !file} className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-40">
@@ -99,8 +100,14 @@ export function PlaytestPage() {
             <div className="grid grid-cols-5 gap-2">{STAGES.map((name, index) => <div key={name} className={`rounded-lg border px-2 py-2.5 text-center text-xs ${done[index] || live && index === stage(current.status) ? 'border-amber-300/20 bg-amber-300/5 text-amber-200' : 'border-white/5 text-zinc-600'}`}><span className="mr-1 font-mono">{done[index] ? <Check className="inline size-3" /> : `0${index+1}`}</span>{name}</div>)}</div>
             {current.error && <div className="rounded-xl border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-200">{current.error}</div>}
             {current.decision_count > 0 && <a className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-amber-200" href={`/api/v1/playtests/${current.id}/runtime-log`}>Download runtime output<ArrowUpRight className="size-3" /></a>}
-            {current.result && <div className="glass p-4"><p className="text-sm text-zinc-200">{current.result.summary ?? current.result.coverage}</p><Link className="mt-3 inline-flex items-center gap-1 text-sm text-amber-300" to={`/app/runs/${current.run_id}`}>Open evidence & report<ArrowUpRight className="size-4" /></Link></div>}
+            {current.result && <div className="glass p-4">
+              {!!current.result.confirmed_bugs && <><p className="mb-1 font-mono text-xs uppercase tracking-wider text-emerald-300">{observedFinding?.category === 'logic' ? 'Confirmed logic bug' : 'Confirmed finding'} · fresh sandbox replay</p><p className="mb-2 text-base font-semibold text-white">{observedFinding?.title ?? 'Reproducible failure detected'}</p></>}
+              <p className="text-sm text-zinc-200">{current.result.summary ?? current.result.coverage}</p>
+              <div className="mt-3 flex flex-wrap gap-4">{current.result.bug_id && <Link className="inline-flex items-center gap-1 text-sm text-amber-300" to={`/app/bugs?bug=${current.result.bug_id}&run=${current.run_id}`}>View bug #{current.result.bug_id} & screenshots<ArrowUpRight className="size-4" /></Link>}
+                <Link className="inline-flex items-center gap-1 text-sm text-zinc-400" to={`/app/runs/${current.run_id}`}>Open run report<ArrowUpRight className="size-4" /></Link></div>
+            </div>}
             <div className="grid gap-4 md:grid-cols-2"><div className="glass p-4"><h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Actual model probabilities</h2>
+              <p className="mb-3 font-mono text-[10px] text-zinc-500">Laya multilingual · CUDA{latestDecision?.data?.action_scope === 'visible door interaction' ? ' · focused door interaction' : ''}</p>
               {probabilities ? Object.entries(probabilities).sort((a,b) => b[1]-a[1]).slice(0,5).map(([action,p]) => <div key={action} className="mb-2"><div className="mb-1 flex justify-between font-mono text-xs"><span>{action}</span><span className="text-amber-200">{(p*100).toFixed(1)}%</span></div><div className="h-1 bg-white/5"><div className="h-full bg-amber-300/70" style={{width: `${p*100}%`}} /></div></div>) : <p className="text-xs text-zinc-600">Available after the first CUDA inference.</p>}</div>
               <div className="glass p-4"><h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Observed screen text</h2><pre className="max-h-36 overflow-auto whitespace-pre-wrap font-mono text-xs leading-relaxed text-zinc-400">{current.latest_observation || 'Waiting for OCR…'}</pre></div></div>
             <div className="glass max-h-52 overflow-auto p-4"><h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Live event log</h2>{events.map(e => <div key={e.id} className="mb-2 flex gap-3 font-mono text-xs"><span className="shrink-0 text-zinc-600">{e.ts.slice(11,19)}</span><span className="text-zinc-300">{e.message}</span></div>)}</div>

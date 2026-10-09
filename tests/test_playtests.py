@@ -97,6 +97,14 @@ def test_game_rule_is_observed_not_guessed(client):
     assert finding({'ocr': '', 'log': 'SCRIPT ERROR: Invalid access on null'}, 'none')['category'] == 'crash'
 
 
+def test_selected_door_rule_focuses_only_a_visible_interaction(client):
+    from backend.app.worker import available_actions
+    prompt = 'KEY MISSING. Test the locked exit with E before collecting the key.'
+    assert set(available_actions(prompt, [], 'key-gated-exit')) == {'interact', 'wait'}
+    assert 'jump_left' in available_actions(prompt, [], 'none')
+    assert 'jump_left' in available_actions('Climb the left ladder. E OPEN', [], 'key-gated-exit')
+
+
 def test_completed_job_cannot_be_cancelled(client):
     from backend.app.db import connect
     job = send(client, pe(), name='game.exe').json()

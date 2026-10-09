@@ -27,7 +27,7 @@ def capabilities():
     online = time.time() - data.get('heartbeat', 0) < 60
     return {'worker_online': online, 'sandbox_ready': online and data.get('sandbox_ready', False),
             'gpu': data.get('gpu') if online else None, 'model': 'convaiinnovations/laya multilingual',
-            'formats': ['Windows x86_64 EXE', 'Windows build ZIP'], 'max_bytes': MAX_BUILD_BYTES,
+            'formats': ['Linux x86_64 executable', 'Linux build ZIP', 'Windows x86_64 EXE (Wine worker)', 'Windows build ZIP (Wine worker)'], 'max_bytes': MAX_BUILD_BYTES,
             'message': data.get('message', 'Start the Docker sandbox and the Laya worker.') if online else
                        'Worker offline. Uploaded builds stay queued until it starts.'}
 

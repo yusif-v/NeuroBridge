@@ -49,6 +49,10 @@ provides no hidden game coordinates, scene state or game-specific waypoint route
 Inputs are A/D, W/S, Space+A/D, E, Enter, R and wait. Restart is offered only for a
 visible failure/retry prompt, and repeated Enter is restricted to menu prompts.
 Mouse and gamepad controls need another adapter.
+When the key/exit assertion is selected and OCR shows a locked-door interaction
+prompt with E, the action set focuses on E and wait. Laya chooses between them;
+the log records the action scope. This is a rule-driven test affordance, not a
+hidden route or an inference that Laya understands arbitrary game geometry.
 
 An exploration budget can end without winning or finding a failure. That result
 is **inconclusive**, not bug-free. Current detectors check application
@@ -63,7 +67,35 @@ stored in Bugs/Reports. Action probabilities are model scores, not proof of a bu
 The **Download runtime output** link exposes captured application output. The
 existing optional report-explanation analyzer is separate from CUDA Laya gameplay.
 
-## Deliberate bug demo
+## Gameplay logic demo: exit opens without the key
+
+`tests/fixtures/door_rule` contains a deliberately faulty door subclass and a
+controlled test start beside the exit with no key. The normal game sources and
+door's key check remain unchanged. Assemble a separate native Linux ZIP with a
+matching Godot editor and Linux x86_64 engine/export-template binary:
+
+```powershell
+python scripts/build_door_demo.py --godot C:\Tools\Godot_console.exe --runtime C:\Tools\Godot_linux.x86_64
+```
+
+The script runs five Godot assertions: correct door locked without key, correct
+door opens with key, seeded door opens without key, start precondition and visible
+HUD evidence. It emits `data/door-demo/DoorRuleBugDemo-Linux.zip`. `--control`
+exports the same starting setup with the correctly locked production door.
+
+Upload the ZIP in **Upload & Playtest**, choose **Key required for exit**, and use
+the goal: “Test the locked exit without collecting the golden key. E interacts
+with the door. Victory must require the key. A/D move, Space jumps, W/S climb.”
+A ten-decision budget is sufficient for the tested run. The failing frame shows
+`KEY MISSING` and `DUNGEON CLEARED` together. The website links directly to the
+logic finding, first screenshot and independent replay screenshot.
+
+This is an explicitly seeded gameplay fault and targeted assertion demonstration.
+It does not demonstrate autonomous discovery of unknown rules or completion of
+the entire dungeon puzzle. The earlier unrestrained run repeated jumps and ended
+inconclusive; that result is retained alongside the successful run.
+
+## Separate runtime exception fixture
 
 `tests/fixtures/runtime_error` is a separate Godot project with a seeded null-node
 exception on keyboard input. Export it with **Linux Desktop**, ZIP its executable
@@ -104,3 +136,8 @@ Godot 4.6.2 native Linux ran the dungeon in Docker; CUDA Laya selected 30 inputs
 It did not complete the puzzle and the result was inconclusive. The separate Linux
 fixture produced a runtime error on Laya's Enter decision, independently reproduced
 in a new container and stored as a confirmed finding with both screenshots.
+The door-rule dungeon demo then ran on RTX 3070 Ti Laptop GPU: Laya selected E
+from the full exploration action set (19.46% score, 391.7 ms inference), opened the
+exit without a key and reproduced that same action in a fresh offline container.
+The report is category `logic`, confirmed, with two actual captured screenshots.
+The normal door's positive and negative key checks passed Godot assertions.
