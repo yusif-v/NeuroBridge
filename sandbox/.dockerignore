@@ -1,0 +1,10 @@
+# The game image needs its Dockerfiles and Python runner, never provider config.
+.env
+.env.*
+**/.env
+**/.env.*
+.git
+.venv
+**/__pycache__
+data
+models

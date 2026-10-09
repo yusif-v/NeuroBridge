@@ -45,6 +45,27 @@ The gateway receives the supplied screenshots, gameplay logs and replay results.
 The uploaded game itself stays in its offline container; Laya still runs locally
 on CUDA. This separate API model writes the report and does not control gameplay.
 
+## Public repository and Docker configuration
+
+Commit only `.env.example`, which has no private API key or deployed gateway
+address. Copy it to a local `.env` and fill in `AI_API_BASE_URL`, `AI_API_KEY` and
+`AI_MODEL` privately. The actual provider endpoint does not need to be published
+on GitHub. Shell environment variables can also supply these values and take
+precedence over `.env`.
+
+`.env` and other `.env.*` variants are ignored by Git; the example remains
+tracked. The repository and sandbox Docker build contexts exclude environment
+files. The game sandbox has no network, receives no provider environment
+variables, and mounts only the uploaded game build. The trusted API/worker host
+loads report credentials at runtime; never bake them into a Dockerfile or image.
+
+A separate mock API service is not required to keep credentials private. The
+automated API tests use mocked HTTP transport without live keys. Runtime report
+analysis uses the configured real provider. With incomplete configuration it
+is disabled, and provider failures show an error/retry state rather than a
+fabricated report. This does not change Laya's local gameplay execution or the
+independent replay confirmation.
+
 ## Output and failure handling
 
 The request includes the JSON schema in both the prompt and structured-output

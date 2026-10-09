@@ -1,0 +1,14 @@
+# Keep local credentials and runtime artifacts out of Docker build contexts.
+.env
+.env.*
+**/.env
+**/.env.*
+.streamlit/secrets.toml
+**/.streamlit/secrets.toml
+.git
+.venv
+**/node_modules
+**/__pycache__
+data
+models
+frontend/dist

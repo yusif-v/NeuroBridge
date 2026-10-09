@@ -173,6 +173,10 @@ The normal game and deliberately faulty QA fixtures are separate. The game is a 
 
 The platform uses **React + TypeScript**, **FastAPI**, **SQLite**, **Docker**, **CUDA Laya**, and a separate multimodal report API. The code is organized into [frontend/](frontend/), [backend/](backend/), [ai/](ai/), [sandbox/](sandbox/) and [tests/](tests/).
 
+Report API keys and deployed gateway addresses belong in the local ignored `.env`,
+not in GitHub or Docker images. The repository provides an empty `.env.example`;
+see [private runtime configuration](docs/AI_INTEGRATION.md#public-repository-and-docker-configuration).
+
 ## License
 
 Original project code and documentation are available under the [MIT License](LICENSE).
