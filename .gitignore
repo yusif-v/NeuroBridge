@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Env / secrets
+.env
+.streamlit/secrets.toml
+
+# Runtime data (SQLite DB, uploaded screenshots, exports)
+data/*
+!data/.gitkeep
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

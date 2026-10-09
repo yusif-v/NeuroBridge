@@ -1,0 +1,6 @@
+fastapi>=0.121
+uvicorn[standard]
+pydantic
+python-multipart
+pytest
+httpx
