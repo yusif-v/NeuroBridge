@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 config/name="Moss & Ember"
-run/main_scene="res://scenes/level.tscn"
+run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://assets/icon.png"
 

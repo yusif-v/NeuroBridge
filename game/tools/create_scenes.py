@@ -315,7 +315,7 @@ offset_left = 92.0
 offset_top = 210.0
 offset_right = 312.0
 offset_bottom = 245.0
-text = "QUIT GAME"
+text = "MAIN MENU"
 ''')
 write('level','\n'.join(out))
 print('Ten reusable scenes and one complete level generated.')

@@ -5,6 +5,14 @@ yükləmir; şəbəkə, AI və hesab tələb etmir. QA yalnız lokal fayllarla �
 
 ## Başlatmaq
 
+`RunGame.cmd` və ya Godot F5 əvvəlcə rejim menyusunu açır. **NORMAL OYUN** ilə
+özün oynayırsan. **LAYA İLƏ BUG TESTİ** lokal CUDA modeli yükləyir və bu demo
+üçün ayrıca pəncərə açır. Menyu yüklənmə/nəticə vəziyyətini göstərir və eyni
+demonun ikinci dəfə açılmasının qarşısını alır. Demo pəncərəsini bağlayandan
+sonra yenidən rejim seçə bilərsən. `LAYA_PYTHON` mühit dəyişəni ilə CUDA
+quraşdırılmış Python/virtual mühitin EXE yolunu vermək olar.
+Başlatma logu `qa/runs/menu-*/launcher.log` daxilindədir.
+
 Hazırkı kompüterdə NVIDIA CUDA, PyTorch və keşdəki Laya multilingual çəkiləri
 istifadə edilir. `RunLayaQA.cmd` normal oyunu model ilə görünən pəncərədə test
 edir. `RunLayaBugDemo.cmd` ayrıca demo qüsurunu aktivləşdirir: açarsız qapının

@@ -57,6 +57,10 @@ func _fresh_level() -> void:
 		evidence_panel.hide()
 	change_scene_to_file("res://scenes/level.tscn")
 	await frames(6)
+	# The QA window closes back to the still-open launcher menu.
+	current_scene.get_node("HUD/Overlay/Card/Quit").text = "CLOSE DEMO"
+	current_scene.get_node("HUD/Overlay/Card/Quit").pressed.disconnect(current_scene._return_to_menu)
+	current_scene.get_node("HUD/Overlay/Card/Quit").pressed.connect(func(): quit())
 	_apply_fault()
 
 func _apply_fault() -> void:

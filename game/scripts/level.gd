@@ -24,7 +24,7 @@ func _ready() -> void:
 	door.locked_attempt.connect(_on_locked)
 	resume_button.pressed.connect(_toggle_pause)
 	restart_button.pressed.connect(restart)
-	$HUD/Overlay/Card/Quit.pressed.connect(func(): get_tree().quit())
+	$HUD/Overlay/Card/Quit.pressed.connect(_return_to_menu)
 	for sound_name in ["jump", "key", "locked", "death", "win"]:
 		var audio := AudioStreamPlayer.new()
 		audio.stream = load("res://assets/audio/" + sound_name + ".wav")
@@ -117,3 +117,7 @@ func _show_overlay(title: String, description: String, show_resume: bool) -> voi
 func restart() -> void:
 	get_tree().paused = false
 	get_tree().reload_current_scene()
+
+func _return_to_menu() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")

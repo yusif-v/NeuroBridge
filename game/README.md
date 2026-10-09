@@ -10,7 +10,19 @@ and included.
 
 1. Use Godot 4 (tested with **4.6.2 stable**, Compatibility renderer).
 2. Import `project.godot` in the Project Manager, then open the project.
-3. Press **F5**. The main scene is `scenes/level.tscn`.
+3. Press **F5**. The main scene is `scenes/main_menu.tscn`.
+4. Choose **NORMAL OYUN** to play, or **LAYA İLƏ BUG TESTİ** to watch the local
+   CUDA model play and demonstrate the seeded door defect. The demo runs in a
+   separate window while the menu stays open. Closing it returns to the menu.
+
+The normal game's pause/victory screen has a **MAIN MENU** button. Laya mode
+requires the optional Python/CUDA/model setup in `qa/README.md`; it displays
+loading status and saves launcher errors under `qa/runs/menu-*/launcher.log`.
+Set `LAYA_PYTHON` to the Python executable for your CUDA environment if needed.
+In a standalone export, normal play works without Python. Launch the QA demo
+from the source project, or point the menu's Inspector `qa_project_directory`
+to the accompanying source folder with Python tools and set `GODOT_BIN` to the
+Godot editor executable (the exported game EXE cannot launch the QA bridge).
 
 In this workspace, double-click `RunGame.cmd` to play using the Godot executable
 extracted from the archive you supplied. In a copied project, the launcher also

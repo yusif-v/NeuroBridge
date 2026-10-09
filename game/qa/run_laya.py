@@ -203,6 +203,7 @@ def main():
     parser.add_argument('--demo', action='store_true', help='Play normally, then inject and detect an isolated demo bug.')
     parser.add_argument('--keep-open', action='store_true', help='Leave the visible demo and loaded CUDA model open until its game window closes.')
     parser.add_argument('--replay', type=Path)
+    parser.add_argument('--launcher-status', type=Path, help=argparse.SUPPRESS)
     args=parser.parse_args()
     if args.godot is None:
         bundled=ROOT/'.tools/godot/Godot_v4.6.2-stable_win64_console.exe'
@@ -248,6 +249,9 @@ def main():
                           model_load_seconds=round(time.perf_counter()-started,2))
             print('Laya loaded on', report['gpu_name'] or report['device'], flush=True)
             bridge=Bridge(args.godot,folder,args.headless,args.fault,args.speed,args.decision_delay)
+            if args.launcher_status:
+                from launch_demo import write_status
+                write_status(args.launcher_status, 'running', 'Laya CUDA testi açıldı. Qərarları ayrıca oyun pəncərəsində izlə.')
             remaining=dict(PROBES)
             while remaining:
                 state_text='QA of a dungeon game. Pick the next untested requirement to investigate. Run each listed test once.'
@@ -336,17 +340,28 @@ def main():
                 execute({'kind':'screenshot','display':f'QA complete | bugs: {len(report["bugs"])}',
                          'confidence':1.0, 'device':report['device']})
     except Exception as exc:
-        report['error']=str(exc)
-        print('QA runner error:',exc,flush=True)
+        if bridge and bridge.process.poll() == 0:
+            report['cancelled']=True
+            report['route_status']='cancelled: demo window closed'
+            print('Demo window closed. Returning to the launcher menu.',flush=True)
+        else:
+            report['error']=str(exc)
+            print('QA runner error:',exc,flush=True)
     finally:
         trace.close()
         make_report(folder,report)
         print('REPORT:',folder/'report.md',flush=True)
+        if args.launcher_status and not report.get('error'):
+            from launch_demo import write_status
+            message = ('Demo pəncərəsi bağlandı. Yenidən rejim seçə bilərsən.' if report.get('cancelled') else
+                       'Test tamamlandı. Bug sübutu demo pəncərəsindədir; bağlayıb menyuya qayıda bilərsən.')
+            write_status(args.launcher_status, 'closed' if report.get('cancelled') else 'complete', message)
         if bridge and args.keep_open and not args.headless and not report.get('error'):
             print('DEMO COMPLETE: window and CUDA model remain open; close the game window to stop.',flush=True)
             while bridge.process.poll() is None: time.sleep(.25)
         if bridge: bridge.close()
     if report.get('error'): return 2
+    if report.get('cancelled'): return 0
     if report['bugs']: return 1
     return 0 if report['route_status'] in ('completed','not run') else 3
 
