@@ -18,6 +18,11 @@ EVIDENCE (what you get):
     "rechecks": [{"result", "attempts", "notes", "created_at"}],
     "screenshots": ["/abs/path/to/file.png", ...]     # local paths, for multimodal models
   }
+
+USAGE (optional but needed for the Usage / cost page): include in the returned dict
+    "usage": {"model": "...", "input_tokens": 1234, "output_tokens": 456, "cost_usd": 0.0012}
+  cost_usd may be omitted if AI_PRICE_INPUT_PER_MTOK / AI_PRICE_OUTPUT_PER_MTOK are set in .env.
+  The platform measures latency itself and strips "usage" before storing the report.
 """
 
 

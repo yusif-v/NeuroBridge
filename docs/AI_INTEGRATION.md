@@ -13,6 +13,12 @@ def analyze_bug(evidence: dict) -> dict: ...
   and local screenshot paths (for multimodal models).
 - **Output:** a dict with the keys in `ai/schema.py` (`AI_REPORT_JSON_SCHEMA` can be passed straight to a
   structured-output API). The UI labels it "AI analysis · hypothesis".
+- **Usage / cost (needed for the Usage page and the feasibility pitch):** add
+  `"usage": {"model": "...", "input_tokens": N, "output_tokens": N, "cost_usd": X}` to the returned dict.
+  If you can't compute `cost_usd`, set `AI_PRICE_INPUT_PER_MTOK` / `AI_PRICE_OUTPUT_PER_MTOK` in `.env`
+  and the platform computes it. Latency is measured by the platform.
+- **Evidence links:** put exact log lines or screenshot captions in `evidence_refs`; the UI highlights
+  the matching log lines when a judge clicks them.
 - **Errors:** just raise. The platform stores `ai_status="error"` and the message; the UI shows Retry.
 - **Status values** on a bug: `none → pending → done | error`, or `disabled` when `is_enabled()` is False.
 

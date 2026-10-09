@@ -1,4 +1,4 @@
-import type { Bug, BugDetail, BugFilters, BugStatus, Build, Facets, ReportFormat, Run, RunDetail, Severity, Stats } from './types'
+import type { Bug, BugDetail, BugFilters, BugStatus, Build, Facets, KnownIssue, ManualSessionRow, NewKnownIssue, NewManualSession, ReportFormat, Run, RunDetail, Scorecard, Severity, Stats, Usage } from './types'
 
 const BASE = '/api/v1'
 
@@ -7,6 +7,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   })
+  if (res.status === 204) return undefined as T
   if (!res.ok) {
     let detail = res.statusText
     try {
@@ -37,6 +38,17 @@ export const api = {
   runs: (limit = 100) => request<Run[]>(`/runs${qs({ limit })}`),
   run: (id: number) => request<RunDetail>(`/runs/${id}`),
   builds: () => request<Build[]>('/builds'),
+  scorecard: (params: { project?: string; build?: string; hourly_rate?: number } = {}) =>
+    request<Scorecard>(`/scorecard${qs(params)}`),
+  knownIssues: (params: { project?: string; build?: string } = {}) => request<KnownIssue[]>(`/known-issues${qs(params)}`),
+  addKnownIssues: (body: { project: string; build: string; issues: NewKnownIssue[] }) =>
+    request<{ build_id: number; count: number }>('/known-issues', { method: 'POST', body: JSON.stringify(body) }),
+  deleteKnownIssue: (id: number) => request<void>(`/known-issues/${id}`, { method: 'DELETE' }),
+  manualSessions: (project?: string) => request<ManualSessionRow[]>(`/manual-sessions${qs({ project })}`),
+  addManualSession: (body: NewManualSession) =>
+    request<{ id: number }>('/manual-sessions', { method: 'POST', body: JSON.stringify(body) }),
+  deleteManualSession: (id: number) => request<void>(`/manual-sessions/${id}`, { method: 'DELETE' }),
+  usage: (project?: string) => request<Usage>(`/usage${qs({ project })}`),
 }
 
 export const reportUrl = {

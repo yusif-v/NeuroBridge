@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Bot, Boxes, Bug, FileText, LayoutDashboard, Play, Plug, Search, Settings, Sparkles } from 'lucide-react'
+import { Bot, Boxes, Bug, Coins, FileText, LayoutDashboard, Play, Plug, Search, Settings, Sparkles, Target } from 'lucide-react'
 import { api } from '../api'
 import { LIVE_MS, cn } from '../lib'
 import { LiveDot } from './ui'
@@ -11,11 +11,13 @@ const NAV = [
   { to: '/bugs', label: 'Bug Reports', icon: Bug },
   { to: '/runs', label: 'Test Runs', icon: Play },
   { to: '/builds', label: 'Builds', icon: Boxes },
+  { to: '/scorecard', label: 'QA Scorecard', icon: Target },
+  { to: '/usage', label: 'Usage', icon: Coins },
   { to: '/reports', label: 'Reports', icon: FileText },
+  { to: '/integrations', label: 'Integrations', icon: Plug },
 ]
 const SOON = [
   { label: 'Agents', icon: Bot },
-  { label: 'Integrations', icon: Plug },
   { label: 'Settings', icon: Settings },
 ]
 

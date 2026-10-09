@@ -16,6 +16,7 @@ POST /runs/{run_id}/logs        (any number of times)   gameplay log lines
 POST /runs/{run_id}/bugs        -> {bug_id, key, is_new} a finding + steps + screenshots + logs
 POST /bugs/{bug_id}/rechecks    reproduced | not_reproduced
 POST /runs/{run_id}/finish      status, summary, stats
+POST /known-issues              bugs deliberately planted in a build (QA scorecard ground truth)
 ```
 
 Rechecking bugs from earlier runs on a new build: `GET /api/v1/bugs?project=<name>&status=open`
@@ -65,7 +66,22 @@ Screenshots can also be uploaded as multipart: `POST /bugs/{bug_id}/screenshots`
 ```json
 {"status": "completed", "summary": "…", "stats": {"tests_total": 5, "tests_passed": 3, "tests_failed": 2, "duration_s": 31.2}}
 ```
-`stats` is free-form; the UI shows whatever keys you send.
+`stats` is free-form; the UI shows whatever keys you send. These keys are used by the scorecard and Usage page:
+
+| Key | Used for |
+|---|---|
+| `duration_s` | Engine time in the manual-vs-automated comparison |
+| `llm_input_tokens`, `llm_output_tokens`, `llm_cost_usd` | Engine LLM cost (if the engine uses an LLM to play) |
+| `actions` | Usage page |
+
+**Planted bugs (known issues)** — ground truth for detection rate / misses
+```json
+{"project": "Dungeon Escape", "build": "1.0.0", "replace": true,
+ "issues": [{"fingerprint": "collision-wall-clip", "title": "Player can walk through walls",
+             "category": "collision", "severity": "high"}]}
+```
+The `fingerprint` must equal the one the engine sends when it reports that bug, otherwise the scorecard
+counts it as missed. SDK: `bl.known_issues(project, build, issues)`. Planted bugs can also be added in the UI.
 
 ## Rules the platform applies
 
@@ -78,3 +94,6 @@ Screenshots can also be uploaded as multipart: `POST /bugs/{bug_id}/screenshots`
 | Recheck `not_reproduced`, bug never confirmed | `verification=not_reproduced` (flaky / false positive) |
 | Recheck `not_reproduced`, bug was confirmed | `status=fixed` (fix verified by retest) |
 | Fixed bug reported or reproduced again | Reopened, `regression=true` |
+| User marks `false_positive` in the UI | Excluded from bug counts; lowers scorecard precision |
+
+Every transition is recorded in the bug's evidence trail (`bug_events`).

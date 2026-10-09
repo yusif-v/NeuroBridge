@@ -1,12 +1,13 @@
 """Runs the AI teammate's analyzer in the background and stores the result."""
 
 import logging
+import time
 
 from ai import analyzer
 
-from .config import MEDIA_DIR
+from .config import AI_PRICE_INPUT_PER_MTOK, AI_PRICE_OUTPUT_PER_MTOK, MEDIA_DIR
 from .db import connect, dumps, now
-from .services import bug_detail
+from .services import add_event, bug_detail
 
 log = logging.getLogger("buglens.ai")
 
@@ -36,14 +37,36 @@ def mark_pending(conn, bug_id: int) -> bool:
     return status == "pending"
 
 
+def _cost(usage: dict) -> float | None:
+    if usage.get("cost_usd") is not None:
+        return float(usage["cost_usd"])
+    tin, tout = usage.get("input_tokens"), usage.get("output_tokens")
+    if AI_PRICE_INPUT_PER_MTOK and AI_PRICE_OUTPUT_PER_MTOK and tin is not None and tout is not None:
+        return (tin * AI_PRICE_INPUT_PER_MTOK + tout * AI_PRICE_OUTPUT_PER_MTOK) / 1_000_000
+    return None
+
+
 def run_analysis(bug_id: int) -> None:
     with connect() as conn:
-        evidence = build_evidence(bug_detail(conn, bug_id))
+        bug = bug_detail(conn, bug_id)
+    evidence = build_evidence(bug)
+    started = time.perf_counter()
     try:
-        report, status = analyzer.analyze_bug(evidence), "done"
+        report, status, error = analyzer.analyze_bug(evidence), "done", None
     except Exception as exc:  # store the failure; the UI shows it and allows retry
         log.exception("AI analysis failed for bug %s", bug_id)
-        report, status = {"error": str(exc)}, "error"
+        report, status, error = {"error": str(exc)}, "error", str(exc)
+    latency_ms = int((time.perf_counter() - started) * 1000)
+    usage = (report.pop("usage", None) if isinstance(report, dict) else None) or {}
+
     with connect() as conn:
         conn.execute("UPDATE bugs SET ai_status = ?, ai_report = ?, updated_at = ? WHERE id = ?",
                      (status, dumps(report), now(), bug_id))
+        conn.execute(
+            """INSERT INTO ai_usage (bug_id, run_id, model, input_tokens, output_tokens, cost_usd,
+                   latency_ms, status, error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (bug_id, bug["last_run_id"], usage.get("model") or (report or {}).get("model"),
+             usage.get("input_tokens"), usage.get("output_tokens"), _cost(usage), latency_ms, status,
+             error, now()))
+        add_event(conn, bug_id, "ai_analyzed" if status == "done" else "ai_failed",
+                  error or f"{usage.get('model') or 'model'} · {latency_ms} ms", bug["last_run_id"])

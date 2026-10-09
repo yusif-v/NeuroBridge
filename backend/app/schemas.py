@@ -5,7 +5,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 Severity = Literal["critical", "high", "medium", "low"]
-BugStatus = Literal["open", "ticketed", "fixed", "ignored"]
+BugStatus = Literal["open", "ticketed", "fixed", "ignored", "false_positive"]
 LogLevel = Literal["debug", "info", "warning", "error"]
 
 
@@ -72,3 +72,30 @@ class RecheckReport(BaseModel):
 class BugUpdate(BaseModel):
     status: BugStatus | None = None
     severity: Severity | None = None
+
+
+class KnownIssue(BaseModel):
+    fingerprint: str = Field(..., description="Must equal the fingerprint the engine uses when it reports this bug")
+    title: str
+    category: str | None = None
+    severity: Severity | None = None
+    notes: str | None = None
+
+
+class KnownIssueBatch(BaseModel):
+    """Planted bugs for a build (ground truth for the QA scorecard)."""
+    project: str
+    build: str
+    issues: list[KnownIssue]
+    replace: bool = Field(False, description="Delete existing known issues for this build first")
+
+
+class ManualSession(BaseModel):
+    project: str
+    build: str | None = None
+    tester: str | None = None
+    duration_min: float = Field(..., gt=0)
+    bugs_found: int = Field(0, ge=0)
+    planted_found: int | None = Field(None, ge=0)
+    false_positives: int = Field(0, ge=0)
+    notes: str | None = None

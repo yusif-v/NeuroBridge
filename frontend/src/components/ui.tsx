@@ -38,9 +38,11 @@ const STATUS: Record<BugStatus, string> = {
   ticketed: 'border-sky-400/30 bg-sky-500/10 text-sky-200',
   fixed: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200',
   ignored: 'border-zinc-600/40 bg-zinc-700/20 text-zinc-400',
+  false_positive: 'border-slate-500/40 bg-slate-600/15 text-slate-400 line-through decoration-slate-500/70',
 }
 export function StatusBadge({ status }: { status: BugStatus }) {
-  return <Pill className={STATUS[status]}><span className="capitalize">{status}</span></Pill>
+  const label = status === 'false_positive' ? 'False positive' : status[0].toUpperCase() + status.slice(1)
+  return <Pill className={STATUS[status]} title={status === 'false_positive' ? 'Marked as false positive by a reviewer' : undefined}>{label}</Pill>
 }
 
 export function VerificationBadge({ v }: { v: Verification }) {

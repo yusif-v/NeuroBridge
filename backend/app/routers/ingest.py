@@ -7,7 +7,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Header, HTT
 from ..ai_bridge import mark_pending, run_analysis
 from ..config import ENGINE_API_KEY
 from ..db import dumps, DB, now
-from ..schemas import BugReport, LogBatch, RecheckReport, RunFinish, RunStart
+from ..schemas import BugReport, KnownIssueBatch, LogBatch, RecheckReport, RunFinish, RunStart
+from .quality import save_known_issues
 from ..services import (add_attachment, add_logs, apply_recheck, bug_key, get_or_create_build,
                         get_or_create_project, require, store_image, upsert_bug)
 
@@ -77,3 +78,9 @@ async def upload_screenshot(conn: DB, bug_id: int, file: UploadFile = File(...),
     filename = store_image(await file.read(), mime)
     att_id = add_attachment(conn, filename, mime, caption, run_id=run_id or bug["last_run_id"], bug_id=bug_id)
     return {"attachment_id": att_id, "url": f"/media/{filename}"}
+
+
+@router.post("/known-issues", status_code=201)
+def push_known_issues(conn: DB, body: KnownIssueBatch):
+    """Engine declares the bugs deliberately planted in a build (ground truth for the QA scorecard)."""
+    return save_known_issues(conn, body, source="engine")

@@ -64,6 +64,12 @@ class BugLens:
         with urllib.request.urlopen(url, timeout=self.timeout) as resp:
             return json.loads(resp.read())
 
+    def known_issues(self, project: str, build: str, issues: list[dict], replace: bool = True) -> dict:
+        """Declare bugs deliberately planted in a build: [{fingerprint, title, category, severity}].
+        Fingerprints must match the ones used when the engine reports those bugs."""
+        return self._post("/known-issues", {"project": project, "build": build, "issues": issues,
+                                            "replace": replace})
+
     def run(self, project: str, build: str, agent: str | None = None, **metadata) -> "Run":
         data = self._post("/runs", {"project": project, "build": build, "agent": agent,
                                     "metadata": metadata or None})

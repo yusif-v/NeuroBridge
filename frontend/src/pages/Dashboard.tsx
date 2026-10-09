@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { ArrowRight, Bug, CheckCircle2, Play, RefreshCw, RotateCcw, ShieldCheck, Sparkles, Wrench } from 'lucide-react'
+import { ArrowRight, Bug, CheckCircle2, Filter, Play, RefreshCw, RotateCcw, ShieldCheck, Sparkles, Target, Wrench, XCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { api } from '../api'
-import { LIVE_MS, cn, duration, timeAgo } from '../lib'
+import { LIVE_MS, cn, duration, pct, timeAgo } from '../lib'
 import type { Severity, Stats } from '../types'
 import { Card, Empty, ErrorNote, Pill, RegressionBadge, RunStatusBadge, SEVERITY_DOT, SEVERITY_HEX, SeverityBadge, Skeleton, VerificationBadge } from '../components/ui'
 
@@ -107,6 +107,26 @@ function Timeline({ stats }: { stats: Stats }) {
   )
 }
 
+function QaStrip() {
+  const { data: sc } = useQuery({ queryKey: ['scorecard', 'dashboard'], queryFn: () => api.scorecard(), refetchInterval: LIVE_MS * 2 })
+  if (!sc?.project) return null
+  const item = (icon: ReactNode, label: string, value: ReactNode, sub: string) => (
+    <div className="flex items-center gap-3">
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white/[0.04] text-zinc-400">{icon}</span>
+      <div><div className="text-[11px] text-zinc-500">{label}</div><div className="text-sm text-zinc-200"><span className="font-semibold tabular-nums text-white">{value}</span> <span className="text-zinc-500">{sub}</span></div></div>
+    </div>
+  )
+  return (
+    <Link to="/scorecard" className="glass group flex flex-wrap items-center gap-x-8 gap-y-3 px-5 py-3.5 transition hover:border-violet-400/20">
+      <span className="label flex items-center gap-2 text-zinc-400"><Target className="size-4 text-violet-300" />QA score <span className="normal-case tracking-normal text-zinc-600">· all builds</span></span>
+      {item(<Target className="size-4 text-emerald-300" />, 'Planted bugs detected', sc.planted ? pct(sc.detection_rate) : '—', sc.planted ? `${sc.detected}/${sc.planted}` : 'none declared')}
+      {item(<Filter className="size-4 text-amber-300" />, 'Noise filtered by recheck', sc.noise_filtered ?? 0, sc.raw_findings ? `of ${sc.raw_findings} raw findings` : '')}
+      {item(<XCircle className="size-4 text-rose-300" />, 'False positives', sc.false_positives ?? 0, `precision ${pct(sc.precision)}`)}
+      <span className="ml-auto flex items-center gap-1 text-xs text-violet-300 group-hover:text-violet-200">Open scorecard <ArrowRight className="size-3" /></span>
+    </Link>
+  )
+}
+
 export function DashboardPage() {
   const { data: stats, error } = useQuery({ queryKey: ['stats'], queryFn: api.stats, refetchInterval: LIVE_MS })
   const runs = stats?.timeline.slice().reverse().slice(0, 6) ?? []
@@ -136,6 +156,8 @@ export function DashboardPage() {
         <Kpi label="Active runs" value={t?.active_runs} icon={<Play className="size-4" />} accent="bg-fuchsia-500" hint={t ? `${t.runs} total` : undefined} />
         <Kpi label="Rechecks" value={t?.rechecks} icon={<RefreshCw className="size-4" />} accent="bg-amber-500" hint={t ? `${t.screenshots} screenshots` : undefined} />
       </div>
+
+      <QaStrip />
 
       {stats ? (
         <>

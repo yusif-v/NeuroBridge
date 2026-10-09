@@ -6,6 +6,9 @@ import { RunsPage } from './pages/Runs'
 import { RunDetailPage } from './pages/RunDetail'
 import { BuildsPage } from './pages/Builds'
 import { ReportsPage } from './pages/Reports'
+import { ScorecardPage } from './pages/Scorecard'
+import { UsagePage } from './pages/Usage'
+import { IntegrationsPage } from './pages/Integrations'
 import { Empty } from './components/ui'
 
 export default function App() {
@@ -17,7 +20,10 @@ export default function App() {
         <Route path="runs" element={<RunsPage />} />
         <Route path="runs/:id" element={<RunDetailPage />} />
         <Route path="builds" element={<BuildsPage />} />
+        <Route path="scorecard" element={<ScorecardPage />} />
+        <Route path="usage" element={<UsagePage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="*" element={<Empty title="Page not found" />} />
       </Route>
     </Routes>

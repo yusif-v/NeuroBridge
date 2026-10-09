@@ -14,7 +14,7 @@ const FILTERS: { key: keyof Facets; label: string; render?: (v: string) => strin
   { key: 'run', label: 'Run', render: (v) => `Run #${v}` },
   { key: 'severity', label: 'Severity', render: (v) => v[0].toUpperCase() + v.slice(1) },
   { key: 'category', label: 'Category' },
-  { key: 'status', label: 'Status', render: (v) => v[0].toUpperCase() + v.slice(1) },
+  { key: 'status', label: 'Status', render: (v) => (v === 'false_positive' ? 'False positive' : v[0].toUpperCase() + v.slice(1)) },
   { key: 'verification', label: 'Verification', render: (v) => v.replace('_', ' ') },
   { key: 'test', label: 'Test' },
   { key: 'agent', label: 'Agent' },

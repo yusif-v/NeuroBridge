@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS bugs (
     description   TEXT,
     category      TEXT,
     severity      TEXT NOT NULL DEFAULT 'medium',   -- critical | high | medium | low
-    status        TEXT NOT NULL DEFAULT 'open',     -- open | ticketed | fixed | ignored
+    status        TEXT NOT NULL DEFAULT 'open',     -- open | ticketed | fixed | ignored | false_positive
     verification  TEXT NOT NULL DEFAULT 'unverified', -- unverified | confirmed | not_reproduced
     regression    INTEGER NOT NULL DEFAULT 0,
     test_name     TEXT,
@@ -100,7 +100,63 @@ CREATE TABLE IF NOT EXISTS attachments (
     created_at  TEXT NOT NULL
 );
 
+-- Bugs deliberately planted in a build: ground truth for the QA scorecard.
+CREATE TABLE IF NOT EXISTS known_issues (
+    id          INTEGER PRIMARY KEY,
+    project_id  INTEGER NOT NULL REFERENCES projects(id),
+    build_id    INTEGER NOT NULL REFERENCES builds(id),
+    fingerprint TEXT NOT NULL,                      -- matches bugs.fingerprint
+    title       TEXT NOT NULL,
+    category    TEXT,
+    severity    TEXT,
+    notes       TEXT,
+    source      TEXT NOT NULL DEFAULT 'manual',     -- engine | manual
+    created_at  TEXT NOT NULL,
+    UNIQUE (build_id, fingerprint)
+);
+
+-- Manual QA baseline to compare the engine against.
+CREATE TABLE IF NOT EXISTS manual_sessions (
+    id              INTEGER PRIMARY KEY,
+    project_id      INTEGER NOT NULL REFERENCES projects(id),
+    build_id        INTEGER REFERENCES builds(id),
+    tester          TEXT,
+    duration_min    REAL NOT NULL,
+    bugs_found      INTEGER NOT NULL DEFAULT 0,
+    planted_found   INTEGER,
+    false_positives INTEGER NOT NULL DEFAULT 0,
+    notes           TEXT,
+    created_at      TEXT NOT NULL
+);
+
+-- One row per AI analysis call (cost / latency tracking).
+CREATE TABLE IF NOT EXISTS ai_usage (
+    id            INTEGER PRIMARY KEY,
+    bug_id        INTEGER REFERENCES bugs(id),
+    run_id        INTEGER REFERENCES runs(id),
+    model         TEXT,
+    input_tokens  INTEGER,
+    output_tokens INTEGER,
+    cost_usd      REAL,
+    latency_ms    INTEGER,
+    status        TEXT NOT NULL,                    -- done | error
+    error         TEXT,
+    created_at    TEXT NOT NULL
+);
+
+-- Audit trail per bug: found, rechecked, confirmed, analyzed, fixed, regressed, status changes.
+CREATE TABLE IF NOT EXISTS bug_events (
+    id          INTEGER PRIMARY KEY,
+    bug_id      INTEGER NOT NULL REFERENCES bugs(id),
+    run_id      INTEGER REFERENCES runs(id),
+    type        TEXT NOT NULL,
+    detail      TEXT,
+    created_at  TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_logs_run ON logs(run_id);
+CREATE INDEX IF NOT EXISTS idx_events_bug ON bug_events(bug_id);
+CREATE INDEX IF NOT EXISTS idx_usage_bug ON ai_usage(bug_id);
 CREATE INDEX IF NOT EXISTS idx_logs_bug ON logs(bug_id);
 CREATE INDEX IF NOT EXISTS idx_att_bug ON attachments(bug_id);
 CREATE INDEX IF NOT EXISTS idx_rechecks_bug ON rechecks(bug_id);
