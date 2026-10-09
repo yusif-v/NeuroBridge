@@ -16,21 +16,24 @@ Başlatma logu `qa/runs/menu-*/launcher.log` daxilindədir.
 Hazırkı kompüterdə NVIDIA CUDA, PyTorch və keşdəki Laya multilingual çəkiləri
 istifadə edilir. `RunLayaQA.cmd` normal oyunu model ilə görünən pəncərədə test
 edir. `RunLayaBugDemo.cmd` ayrıca demo qüsurunu aktivləşdirir: açarsız qapının
-açılması. Normal oyun səhnələri dəyişdirilmir. Bug launcher əvvəl normal
-yoxlamaları, sonra qəsdən əlavə edilmiş qapı bugını göstərir və nəticəni açıq
-saxlayır. Launcher tam oynama marşrutunu da işlədir: oyunçu açarı toplayır,
-yeşiyi itələyir, platformalardan istifadə edir və çıxışa çatır. Yalnız tez qapı
+açılması. Normal oyun səhnələri dəyişdirilmir. Bug launcher **əvvəl tam səviyyəni
+başlanğıcdan oynayır**: oyunçu açarı toplayır, yeşiyi itələyir, platformalardan
+istifadə edir və çıxışa çatır. Oynama zamanı teleport yoxdur. Sonra ayrıca normal
+qayda yoxlamaları və qəsdən əlavə edilmiş qapı bugı göstərilir, nəticə açıq qalır.
+İzolyasiya olunmuş testlərdə obyektlər yoxlama yerinə yerləşdirilir. Yalnız tez qapı
 nümayişi üçün `--probes-only` seçimini əlavə edin. Normal oyunu qəsdən bug
 əlavə etmədən test etmək üçün `RunLayaQA.cmd` istifadə edin.
 
-Görünən demo standart olaraq **yarım sürətlə** oynayır; qərarlar arasında
-0.7 saniyə real fasilə var. `--speed 0.25` daha da yavaşladır. Hər fizika addımı
+Görünən demo standart olaraq **normal oyun sürətinin 75%-i** ilə oynayır (`--speed 0.75`).
+Hər yeni qərar əvvəl iri Azərbaycan dilində başlıqda göstərilir; hərəkətə
+başlamazdan əvvəl **0.7 saniyə** dünya donur ki, düyməni və məqsədi oxuya biləsən.
+Məlumat paneli aşağı sağdadır və sol nərdivəni/oyunçunu örtmür. Hər fizika addımı
 yenə 1/60 oyun saniyəsidir, ona görə yoxlanılmış tullanışlar qorunur.
-`--decision-delay 1.5` ilə qərarlara baxmaq üçün daha uzun fasilə verə bilərsiniz.
+`--decision-delay 2 --speed 0.25` daha yavaş nümayiş edir.
 
-Qapı testi E basılmadan əvvəl 3 saniyə dayanır: qırmızı çərçivəli mərkəzi qapı
+Qapı testi E basılmadan əvvəl 6 saniyə dayanır: qırmızı çərçivəli mərkəzi qapı
 bağlıdır, oyunçunun inventarı boşdur və açar solda görünür. E-dən sonra demo
-qapısı açılır və qələbə verilir. Aşağıdakı **BUG #01** paneli gözlənilən və
+qapısı açılır və qələbə verilir; nəticə 8 saniyə göstərilir. Aşağıdakı **BUG #01** paneli gözlənilən və
 müşahidə edilən vəziyyəti göstərir. **REPLAY BUG (slow)** qeydə alınmış testin
 yavaş təkrarıdır; ayrıca yeni model qərarı kimi təqdim edilmir.
 
@@ -61,10 +64,11 @@ GitHub-dan götürülmüş versiyada Godot EXE ayrıca quraşdırılmalıdır. Q
 
 ## Model nə edir?
 
-Laya həqiqi GPU inference ilə test ssenarisini və hər növbəti hərəkəti seçir.
-İlk yoxlamalar: açarsız qapı, ölümdən sonra tam reset, pauza və nərdivəndən
-eniş. Sonra model sadə waypoint bələdçisi ilə səviyyəni oynayır: açar, yeşik,
-hərəkətli platformalar və çıxış. Modelə ekran şəkli deyil, Godot-dan gələn
+Əsas checkpoint `convaiinnovations/laya` daxilindəki **multilingual** modeldir.
+`laya 0.3.21` SDK versiyasıdır. Laya həqiqi GPU inference ilə test ssenarisini
+və hər növbəti hərəkəti seçir. Demo əvvəl waypoint bələdçisi ilə səviyyəni oynayır:
+açar, yeşik, hərəkətli platformalar və çıxış. Sonra açarsız qapı, ölümdən sonra
+tam reset, pauza və nərdivəndən eniş yoxlanılır. Modelə ekran şəkli deyil, Godot-dan gələn
 koordinatlar və vəziyyətin mətn təsviri verilir.
 
 Waypoint sırası və hərəkət motoru əvvəlcədən verilmişdir. Bu versiya modelin

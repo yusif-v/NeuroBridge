@@ -12,7 +12,9 @@ and included.
 2. Import `project.godot` in the Project Manager, then open the project.
 3. Press **F5**. The main scene is `scenes/main_menu.tscn`.
 4. Choose **NORMAL OYUN** to play, or **LAYA İLƏ BUG TESTİ** to watch the local
-   CUDA model play and demonstrate the seeded door defect. The demo runs in a
+   CUDA model play the full level from spawn at 75% speed, then test the
+   rules and demonstrate the seeded door defect. Each decision is shown for
+   0.7 seconds before its action. The demo runs in a
    separate window while the menu stays open. Closing it returns to the menu.
 
 The normal game's pause/victory screen has a **MAIN MENU** button. Laya mode

@@ -8,9 +8,11 @@ var last_command: int = 0
 var actual_pause: bool = false
 var fault: String = "none"
 var status_label: Label
+var action_caption: Label
 var last_probe: Dictionary = {}
 var decision_history: Array[String] = []
-var speed: float = 0.5
+var speed: float = 0.75
+var decision_hold: float = 0.7
 var evidence_panel: ColorRect
 var evidence_title: Label
 var evidence_detail: Label
@@ -26,6 +28,8 @@ func _initialize() -> void:
 			fault = args[i + 1]
 		if args[i] == "--speed" and i + 1 < args.size():
 			speed = clampf(float(args[i + 1]), 0.25, 1.0)
+		if args[i] == "--decision-hold" and i + 1 < args.size():
+			decision_hold = clampf(float(args[i + 1]), 0.0, 5.0)
 	if session_dir.is_empty():
 		push_error("Missing --qa-dir")
 		quit(2)
@@ -89,16 +93,31 @@ func _run() -> void:
 	ui.process_mode = Node.PROCESS_MODE_ALWAYS
 	root.add_child(ui)
 	var background := ColorRect.new()
-	background.position = Vector2(40, 68)
-	background.size = Vector2(278, 146)
+	background.position = Vector2(452, 300)
+	background.size = Vector2(292, 112)
 	background.color = Color(0.025, 0.08, 0.10, 0.95)
 	ui.add_child(background)
 	status_label = Label.new()
-	status_label.position = Vector2(48, 73)
-	status_label.add_theme_font_size_override("font_size", 11)
+	status_label.position = Vector2(460, 305)
+	status_label.size = Vector2(276, 102)
+	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status_label.clip_text = true
+	status_label.add_theme_font_size_override("font_size", 10)
 	status_label.modulate = Color("e9d18a")
 	status_label.text = "LAYA 0.3.21 • LOCAL CUDA\nWaiting for a real model decision…"
 	ui.add_child(status_label)
+	var action_background := ColorRect.new()
+	action_background.position = Vector2(24, 34)
+	action_background.size = Vector2(720, 37)
+	action_background.color = Color("17362e")
+	ui.add_child(action_background)
+	action_caption = Label.new()
+	action_caption.position = Vector2(36, 39)
+	action_caption.size = Vector2(696, 28)
+	action_caption.add_theme_font_size_override("font_size", 17)
+	action_caption.modulate = Color("f5d779")
+	action_caption.text = "LAYA CUDA • Modelin qərarını gözləyirik…"
+	ui.add_child(action_caption)
 	_build_evidence_ui()
 	_publish()
 	paused = true
@@ -107,7 +126,14 @@ func _run() -> void:
 		var path: String = session_dir.path_join("command-%d.json" % (last_command + 1))
 		if not FileAccess.file_exists(path):
 			continue
-		var value: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+		# Retry briefly unavailable/incomplete IPC files silently on Windows.
+		var contents: String = FileAccess.get_file_as_string(path)
+		if contents.is_empty():
+			continue
+		var parser := JSON.new()
+		if parser.parse(contents) != OK:
+			continue
+		var value: Variant = parser.data
 		if not value is Dictionary or int(value.get("id", -1)) <= last_command:
 			continue
 		last_command = int(value.id)
@@ -119,10 +145,10 @@ func _run() -> void:
 		last_probe = {}
 		var display: String = str(value.get("display", "action"))
 		decision_history.push_front(display.left(44))
-		if decision_history.size() > 4:
+		if decision_history.size() > 2:
 			decision_history.pop_back()
 		var source: String = "REAL INFERENCE" if value.has("inference_ms") else "QA CONTROLLER"
-		status_label.text = "LAYA 0.3.21 • %s • %s\n" % [str(value.get("device", "cuda")).to_upper(), source]
+		status_label.text = "LAYA multilingual • %s\n%s\n" % [str(value.get("device", "cuda")).to_upper(), source]
 		if value.has("inference_ms"):
 			status_label.text += "%.1f ms | P(action) %.1f%%\n" % [float(value.inference_ms), float(value.get("confidence", 0.0)) * 100.0]
 		if value.has("probabilities"):
@@ -133,7 +159,13 @@ func _run() -> void:
 			status_label.text += probability_text + "\n"
 		for entry in decision_history:
 			status_label.text += entry + "\n"
-		if value.get("kind", "") == "probe":
+		_show_action(value)
+		# Show the new model decision before moving, using a real-time pause.
+		if value.has("inference_ms") and value.get("kind", "") in ["action", "probe"]:
+			await _hold_visible(decision_hold)
+		if value.get("kind", "") == "message":
+			await _hold_visible(float(value.get("hold_seconds", 6.0)))
+		elif value.get("kind", "") == "probe":
 			await _probe(str(value.get("probe", "")))
 		elif value.get("kind", "") == "reset":
 			await _fresh_level()
@@ -173,6 +205,27 @@ func _run() -> void:
 func vector(value: Vector2) -> Dictionary:
 	return {"x": snappedf(value.x, 0.01), "y": snappedf(value.y, 0.01)}
 
+func _show_action(value: Dictionary) -> void:
+	var captions := {
+		"move_left": "A / ←  •  Sola get", "move_right": "D / →  •  Sağa get",
+		"jump_left": "SPACE + A  •  Sola tullan", "jump_right": "SPACE + D  •  Sağa tullan",
+		"climb_up": "W / ↑  •  Yuxarı qalx", "climb_down": "S / ↓  •  Aşağı en",
+		"interact": "E  •  Qapını aç", "wait": "GÖZLƏ  •  Platformanın yaxınlaşmasını izlə",
+		"locked_exit": "TEST  •  Açar olmadan qapı bağlı qalmalıdır",
+		"death_reset": "TEST  •  Ölümdən sonra bütün səviyyə sıfırlanır",
+		"pause_freeze": "TEST  •  Pauzada platformalar dayanmalıdır",
+		"ladder_descent": "TEST  •  S ilə nərdivəndən aşağı enmək",
+	}
+	var chosen: String = str(value.get("action_label", value.get("probe", "")))
+	if captions.has(chosen):
+		action_caption.text = str(captions[chosen])
+		if value.has("decision"):
+			action_caption.text = "#%02d  " % int(value.decision) + action_caption.text
+	elif bool(value.get("bug_found", false)):
+		action_caption.text = "BUG TAPILDI  •  Qapı açarsız açıldı — aşağıda sübut var"
+	else:
+		action_caption.text = str(value.get("display", "LAYA CUDA"))
+
 func _publish() -> void:
 	var level: Node2D = current_scene
 	var p: Adventurer = level.player
@@ -203,13 +256,13 @@ func _probe(name: String) -> void:
 			await frames(5)
 			_show_evidence(false, true)
 			await _capture("bug-before.png")
-			await _hold_visible(3.0)
+			await _hold_visible(6.0)
 			Input.action_press("interact")
 			await frames(3)
 			release_inputs()
 			_show_evidence(level.door.is_open and not level.player.has_key, false)
 			await _capture("bug-after.png")
-			await _hold_visible(3.0)
+			await _hold_visible(8.0)
 			last_probe = {"name": name, "passed": not level.won and not level.door.is_open,
 				"expected": "The door stays locked without a key", "actual": "Door open: %s; victory: %s; key: %s" % [level.door.is_open, level.won, level.player.has_key]}
 		"death_reset":

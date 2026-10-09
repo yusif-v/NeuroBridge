@@ -31,18 +31,19 @@ ACTIONS = {
 }
 
 class Bridge:
-    def __init__(self, engine, folder, headless, fault, speed=0.5, decision_delay=0.7):
+    def __init__(self, engine, folder, headless, fault, speed=0.75, decision_delay=0.7):
         self.folder, self.counter = folder, 0
         self.decision_delay=0.0 if headless else decision_delay
         self.log = open(folder/'godot.log', 'w', encoding='utf-8')
         command = [str(engine), '--path', str(ROOT),
                    '--script', 'res://qa/bridge.gd']
         if headless: command += ['--headless','--fixed-fps','60']
-        command += ['--', '--qa-dir', str(folder), '--fault', fault, '--speed',str(speed)]
+        command += ['--', '--qa-dir', str(folder), '--fault', fault, '--speed',str(speed),
+                    '--decision-hold',str(self.decision_delay)]
         self.process = subprocess.Popen(command, cwd=ROOT, stdout=self.log, stderr=subprocess.STDOUT)
         self.state = self.receive(-1)
 
-    def receive(self, old_sequence, timeout=25):
+    def receive(self, old_sequence, timeout=60):
         deadline = time.monotonic()+timeout
         while time.monotonic() < deadline:
             if self.process.poll() is not None:
@@ -55,7 +56,6 @@ class Bridge:
         raise TimeoutError(f'No Godot response. See {self.folder / "godot.log"}')
 
     def send(self, command):
-        if command.get('kind')!='stop': time.sleep(self.decision_delay)
         self.counter += 1
         command = dict(command, id=self.counter)
         temporary = self.folder/f'command-{self.counter}.tmp'
@@ -195,8 +195,8 @@ def main():
     parser.add_argument('--device', default='cuda', choices=['cuda','cpu'])
     parser.add_argument('--godot', type=Path, help='Godot 4 executable; also found via GODOT_BIN or PATH.')
     parser.add_argument('--headless', action='store_true')
-    parser.add_argument('--speed',type=float,default=0.5,help='Visible game playback speed, default 0.5.')
-    parser.add_argument('--decision-delay',type=float,default=0.7,help='Real seconds between visible decisions.')
+    parser.add_argument('--speed',type=float,default=0.75,help='Visible game playback speed, default 0.75.')
+    parser.add_argument('--decision-delay',type=float,default=0.7,help='Real seconds to read each model decision before its action.')
     parser.add_argument('--fault', default='none', choices=['none','door_without_key','ladder_down_blocked'])
     parser.add_argument('--max-decisions', type=int, default=180)
     parser.add_argument('--probes-only', action='store_true')
@@ -225,6 +225,19 @@ def main():
                 'inference_ms':inference_ms,'before':before,'after':after}
         trace.write(json.dumps(record)+'\n'); trace.flush()
         return after
+    def run_probes():
+        remaining=dict(PROBES)
+        while remaining:
+            state_text='QA of a dungeon game. Pick the next untested requirement to investigate. Run each listed test once.'
+            answer,ms=infer(agent,state_text,remaining,'Which test case should run next?')
+            selected=answer['choice']
+            result=execute({'kind':'probe','probe':selected,'display':selected,
+                            'confidence':answer['answer_confidence'],'probabilities':answer['probabilities'],
+                            'inference_ms':ms,'device':report['device']},answer,state_text,ms)['probe']
+            report['probes'].append(result)
+            if not result['passed']: report['bugs'].append(result)
+            remaining.pop(selected)
+            print(('PASS' if result['passed'] else 'BUG'),selected,'|',result['actual'],flush=True)
     try:
         if args.replay:
             bridge=Bridge(args.godot, folder, args.headless, args.fault,args.speed,args.decision_delay)
@@ -252,18 +265,10 @@ def main():
             if args.launcher_status:
                 from launch_demo import write_status
                 write_status(args.launcher_status, 'running', 'Laya CUDA testi açıldı. Qərarları ayrıca oyun pəncərəsində izlə.')
-            remaining=dict(PROBES)
-            while remaining:
-                state_text='QA of a dungeon game. Pick the next untested requirement to investigate. Run each listed test once.'
-                answer,ms=infer(agent,state_text,remaining,'Which test case should run next?')
-                selected=answer['choice']
-                result=execute({'kind':'probe','probe':selected,'display':selected,
-                                'confidence':answer['answer_confidence'],'probabilities':answer['probabilities'],
-                                'inference_ms':ms,'device':report['device']},answer,state_text,ms)['probe']
-                report['probes'].append(result)
-                if not result['passed']: report['bugs'].append(result)
-                remaining.pop(selected)
-                print(('PASS' if result['passed'] else 'BUG'),selected,'|',result['actual'],flush=True)
+            # Visible demo starts at spawn and plays the whole level first.
+            # Isolated probes reposition actors only AFTER the escape run.
+            if not args.demo or args.probes_only:
+                run_probes()
             execute({'kind':'reset','display':'start guided escape route'})
             if not args.probes_only and args.fault=='none':
                 steps=route_steps(); index=0; route_started=time.perf_counter()
@@ -300,6 +305,12 @@ def main():
                 report['route_seconds']=round(time.perf_counter()-route_started,2)
                 report['last_route_goal']=steps[min(index,len(steps)-1)]['name']
             elif args.fault!='none': report['route_status']='not run: isolated seeded-fault probes'
+            if args.demo and not args.probes_only:
+                phase=('Normal oyun bitdi. İndi ayrıca bug yoxlamaları başlayır.'
+                       if report['route_status']=='completed' else
+                       'Oynama tamamlanmadı. İndi ayrıca qayda yoxlamaları başlayır.')
+                execute({'kind':'message','display':phase,'hold_seconds':6.0})
+                run_probes()
             if args.demo:
                 report['demo_fault']='door_without_key'
                 execute({'kind':'set_fault','fault':'door_without_key','display':'inject isolated demo fault'})

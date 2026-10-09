@@ -89,7 +89,7 @@ func _build_menu() -> void:
 	laya_button.name = "LayaDemo"
 	laya_button.pressed.connect(start_laya)
 	_label("AI oynasın. Qərarlarını izlə.", Rect2(412, 216, 302, 26), 17, "eee0b3")
-	_label("CUDA modeli • yarım sürət\nSonda qəsdən əlavə edilmiş qapı bugı.", Rect2(412, 248, 302, 48), 14)
+	_label("CUDA modeli • 0.75× sürət\nSonda qəsdən əlavə edilmiş qapı bugı.", Rect2(412, 248, 302, 48), 14)
 	status = _label("Rejimi seç. Laya testi ayrıca oyun pəncərəsində açılır.", Rect2(38, 322, 694, 56), 14)
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var quit_button := _button("ÇIXIŞ", Rect2(596, 385, 136, 32))
@@ -161,7 +161,9 @@ func _process(delta: float) -> void:
 		return
 	poll_timer = 0.5
 	if FileAccess.file_exists(status_path):
-		var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(status_path))
+		var parser := JSON.new()
+		var parsed: Error = parser.parse(FileAccess.get_file_as_string(status_path))
+		var data: Variant = parser.data if parsed == OK else null
 		if data is Dictionary:
 			status.text = str(data.get("message", "Laya testi işləyir…"))
 	if not OS.is_process_running(demo_pid):
