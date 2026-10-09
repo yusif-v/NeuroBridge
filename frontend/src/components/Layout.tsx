@@ -1,22 +1,24 @@
 import { useState, type FormEvent } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Bot, Boxes, Bug, FileText, LayoutDashboard, Play, Plug, Search, Settings, Sparkles, Upload } from 'lucide-react'
+import { Bot, Boxes, Bug, Coins, FileText, LayoutDashboard, Play, Plug, Search, Settings, Sparkles, Target, Upload } from 'lucide-react'
 import { api } from '../api'
 import { LIVE_MS, cn } from '../lib'
 import { LiveDot } from './ui'
 
 const NAV = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/playtest', label: 'Upload & Playtest', icon: Upload },
-  { to: '/bugs', label: 'Bug Reports', icon: Bug },
-  { to: '/runs', label: 'Test Runs', icon: Play },
-  { to: '/builds', label: 'Builds', icon: Boxes },
-  { to: '/reports', label: 'Reports', icon: FileText },
+  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/app/playtest', label: 'Upload & Playtest', icon: Upload },
+  { to: '/app/bugs', label: 'Bug Reports', icon: Bug },
+  { to: '/app/runs', label: 'Test Runs', icon: Play },
+  { to: '/app/builds', label: 'Builds', icon: Boxes },
+  { to: '/app/scorecard', label: 'QA Scorecard', icon: Target },
+  { to: '/app/usage', label: 'Usage', icon: Coins },
+  { to: '/app/reports', label: 'Reports', icon: FileText },
+  { to: '/app/integrations', label: 'Integrations', icon: Plug },
 ]
 const SOON = [
   { label: 'Agents', icon: Bot },
-  { label: 'Integrations', icon: Plug },
   { label: 'Settings', icon: Settings },
 ]
 
@@ -29,36 +31,37 @@ export function Layout() {
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault()
-    navigate(`/bugs${q ? `?q=${encodeURIComponent(q)}` : ''}`)
+    navigate(`/app/bugs${q ? `?q=${encodeURIComponent(q)}` : ''}`)
   }
 
   return (
     <div className="flex h-full">
-      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-white/[0.06] bg-black/20 px-3 py-5 backdrop-blur-xl max-lg:w-16 max-lg:px-2">
-        <div className="mb-8 flex items-center gap-3 px-2">
-          <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-900/50">
+      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-white/[0.07] bg-[#09090f] px-3 py-5 max-lg:w-16 max-lg:px-2">
+        <Link to="/" title="BugLens AI — home" className="mb-8 flex items-center gap-3 rounded-sm px-2">
+          <div className="grid size-8 shrink-0 place-items-center rounded-sm bg-violet-500">
             <Search className="size-4 text-white" strokeWidth={2.5} />
           </div>
           <div className="max-lg:hidden">
-            <div className="text-[15px] font-semibold tracking-tight text-white">BugLens <span className="bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-transparent">AI</span></div>
-            <div className="text-[11px] text-zinc-500">LLM-powered game QA</div>
+            <div className="text-[15px] font-semibold tracking-tight text-white">BugLens <span className="text-violet-300">AI</span></div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">Game QA platform</div>
           </div>
-        </div>
+        </Link>
 
-        <nav className="flex flex-col gap-1">
+        <div className="eyebrow mb-2 px-3 max-lg:hidden">Platform</div>
+        <nav className="flex flex-col gap-0.5" aria-label="Platform">
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink key={to} to={to} end={end} title={label}
               className={({ isActive }) => cn(
-                'group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition',
-                isActive ? 'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/5 text-white ring-1 ring-inset ring-violet-400/20' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200',
+                'group relative flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors',
+                isActive ? 'bg-white/[0.04] text-white' : 'text-zinc-400 hover:bg-white/[0.03] hover:text-zinc-100',
               )}>
               {({ isActive }) => (
                 <>
-                  {isActive && <span className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-violet-400 to-fuchsia-400 max-lg:-left-2" />}
-                  <Icon className={cn('size-4 shrink-0', isActive && 'text-violet-300')} />
+                  {isActive && <span className="absolute inset-y-1 left-0 w-0.5 bg-violet-400" />}
+                  <Icon className={cn('size-4 shrink-0', isActive ? 'text-violet-300' : 'text-zinc-500 group-hover:text-zinc-300')} />
                   <span className="max-lg:hidden">{label}</span>
                   {label === 'Bug Reports' && !!openBugs && (
-                    <span className="ml-auto rounded-full bg-white/[0.06] px-2 text-[11px] tabular-nums text-zinc-300 max-lg:hidden">{openBugs}</span>
+                    <span className="ml-auto rounded-sm border border-white/[0.08] px-1.5 font-mono text-[11px] tabular-nums text-zinc-300 max-lg:hidden">{openBugs}</span>
                   )}
                 </>
               )}
@@ -66,10 +69,10 @@ export function Layout() {
           ))}
         </nav>
 
-        <div className="label mb-2 mt-8 px-3 max-lg:hidden">Coming soon</div>
-        <div className="flex flex-col gap-1 max-lg:mt-6">
+        <div className="eyebrow mb-2 mt-8 px-3 max-lg:hidden">Coming soon</div>
+        <div className="flex flex-col gap-0.5 max-lg:mt-6">
           {SOON.map(({ label, icon: Icon }) => (
-            <div key={label} title={`${label} — coming soon`} className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2 text-sm text-zinc-600">
+            <div key={label} title={`${label} — coming soon`} className="flex cursor-not-allowed items-center gap-3 rounded-sm px-3 py-2 text-sm text-zinc-600">
               <Icon className="size-4 shrink-0" />
               <span className="max-lg:hidden">{label}</span>
             </div>
@@ -77,7 +80,7 @@ export function Layout() {
         </div>
 
         <div className="mt-auto max-lg:hidden">
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+          <div className="border-t border-white/[0.07] px-3 pt-4">
             <div className="flex items-center gap-2 text-xs font-medium text-zinc-300">
               <Sparkles className="size-3.5 text-violet-300" /> AI analyzer
             </div>
@@ -89,24 +92,24 @@ export function Layout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-white/[0.06] bg-[#09090f]/70 px-6 py-3 backdrop-blur-xl">
-          <form onSubmit={onSearch} className="relative w-full max-w-md">
+        <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-white/[0.07] bg-[#09090f] px-6 py-3 lg:px-10">
+          <form onSubmit={onSearch} role="search" className="relative w-full max-w-md">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search bugs…" className="input pl-9" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search bugs…" aria-label="Search bugs" className="input pl-9" />
           </form>
           <div className="ml-auto flex items-center gap-3">
             {live ? <LiveDot label={`${stats.data!.totals.active_runs} run${stats.data!.totals.active_runs > 1 ? 's' : ''} live`} /> : (
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.07] px-2.5 py-1 text-xs text-zinc-500">
+              <span className="inline-flex items-center gap-2 rounded-sm border border-white/[0.08] px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-zinc-500 max-sm:hidden">
                 <span className="size-2 rounded-full bg-zinc-600" /> Engine idle
               </span>
             )}
-            <div className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] py-1 pl-1 pr-3">
-              <div className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-emerald-400/80 to-teal-500/80 text-xs font-bold text-white">QA</div>
-              <span className="text-sm text-zinc-300">QA Team</span>
+            <div className="flex items-center gap-2 rounded-sm border border-white/[0.08] py-1 pl-1 pr-3">
+              <div className="grid size-7 place-items-center rounded-sm bg-emerald-500/80 text-xs font-bold text-white">QA</div>
+              <span className="text-sm text-zinc-300 max-sm:hidden">QA Team</span>
             </div>
           </div>
         </header>
-        <main className="min-w-0 flex-1 px-6 py-6">
+        <main className="min-w-0 flex-1 px-6 py-8 lg:px-10 lg:py-10">
           <Outlet />
         </main>
       </div>

@@ -76,10 +76,24 @@ Bug `status`: open · ticketed · fixed · ignored. `verification`: unverified �
 | Runs | Run list → run detail: summary, stats, bugs, log timeline, export |
 | Bugs (main) | Mockup layout: search, filters, dense table, side panel with screenshots, expected/actual, steps, recheck history, AI card, logs, metadata, actions |
 | Builds | Per-build open / fixed counts |
+| QA Scorecard | Planted-bug detection rate, misses, precision, false positives, noise filtered by recheck, engine vs manual (time, bugs, cost) |
+| Usage | AI + engine LLM tokens and cost, cost per run / per confirmed bug, monthly projection |
+| Integrations | 3-step engine setup, curl + CI snippets, data requirements table |
 | Reports | Export run or filtered bugs as HTML (self-contained, screenshots embedded), Markdown, JSON, CSV |
-| Agents, Integrations, Settings | Greyed "coming soon" |
+| Agents, Settings | Greyed "coming soon" |
 
-## 6. Timeline (6 hours)
+## 6. Judging criteria → where we prove it
+
+| Criterion | Points | Evidence in the product |
+|---|---|---|
+| Quality testing: results, planted bugs, false detections, manual comparison | 20 | **QA Scorecard**: detection rate vs planted list, missed bugs, false positives (human-marked), noise rejected by recheck, engine vs manual session side by side |
+| Feasibility: API cost, data requirements, customer usage, next phase | 15 | **Usage** page (measured cost per run / per bug + projection), **Integrations** page (data requirements, SDK, CI), roadmap slide |
+| Originality: evidence-based testing, not just AI-written reports | 10 | Recheck before report, fixed only on retest, regression detection, **evidence trail** per bug, AI claims linked to exact log lines and labelled hypothesis |
+
+**Team actions:** engine sends planted bugs per build (`known_issues`) and `duration_s` / `llm_*` stats;
+AI returns `usage`; pitch teammate logs a **real** manual test session on the same build in the Scorecard page.
+
+## 7. Timeline (6 hours)
 
 | Time | Platform | Others |
 |---|---|---|
@@ -90,7 +104,7 @@ Bug `status`: open · ticketed · fixed · ignored. `verification`: unverified �
 | 4:30–5:15 | Seed final demo DB from a **real** engine run | Pitch deck |
 | 5:15–6:00 | **Code freeze**, rehearse 2×, record backup video | |
 
-## 7. Demo script (3 min)
+## 8. Demo script (3 min)
 
 1. Dashboard empty → start the engine on build `1.0.0` → bugs appear live.
 2. Bugs page → open the wall-clip bug: screenshot, expected vs actual, steps, recheck 3/3 reproduced.
@@ -98,8 +112,10 @@ Bug `status`: open · ticketed · fixed · ignored. `verification`: unverified �
 4. Show a flaky finding the recheck rejected → "we don't report noise".
 5. Engine runs build `1.0.1` → wall bug turns **Fixed (verified by recheck)**.
 6. (Optional) build `1.0.2` → **Regression** badge.
-7. Export the HTML report. Close: "Engine finds, recheck confirms, AI explains, platform proves."
+7. QA Scorecard: planted bugs detected, noise filtered, engine vs manual time and cost.
+8. Usage: measured cost per confirmed bug + monthly projection.
+9. Export the HTML report. Close: "Engine finds, recheck confirms, AI explains, platform proves."
 
-## 8. Out of scope (say honestly)
+## 9. Out of scope (say honestly)
 
 Real Jira integration, auth/multi-user, multi-tenant, Unity/Unreal plugins (SDK is engine-agnostic HTTP).

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Play } from 'lucide-react'
 import { api } from '../api'
 import { LIVE_MS, duration, fmtDate } from '../lib'
-import { Empty, ErrorNote, RunStatusBadge, Skeleton } from '../components/ui'
+import { Empty, ErrorNote, PageHeader, RunStatusBadge, Skeleton } from '../components/ui'
 import { StatsChips } from '../components/StatsChips'
 
 export function RunsPage() {
@@ -11,11 +11,9 @@ export function RunsPage() {
   const runs = useQuery({ queryKey: ['runs'], queryFn: () => api.runs(), refetchInterval: LIVE_MS })
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Test Runs</h1>
-        <p className="mt-1 text-sm text-zinc-500">Each session where the engine played a build and reported what it found.</p>
-      </div>
+    <div className="mx-auto max-w-[1400px] space-y-8">
+      <PageHeader index="03" section="Engine sessions" title="Test Runs"
+        lede="Each session where the engine played a build and reported what it found." />
       {runs.error && <ErrorNote error={runs.error} />}
       <div className="glass overflow-hidden">
         <div className="overflow-x-auto">
@@ -30,7 +28,7 @@ export function RunsPage() {
             <tbody className="divide-y divide-white/[0.04]">
               {runs.isLoading && Array.from({ length: 5 }).map((_, i) => <tr key={i}><td colSpan={10} className="px-5 py-3"><Skeleton className="h-6" /></td></tr>)}
               {runs.data?.map((r) => (
-                <tr key={r.id} onClick={() => navigate(`/runs/${r.id}`)} className="cursor-pointer transition hover:bg-white/[0.025]">
+                <tr key={r.id} onClick={() => navigate(`/app/runs/${r.id}`)} className="cursor-pointer transition hover:bg-white/[0.025]">
                   <td className="py-3 pl-5 pr-3 font-mono text-xs text-violet-300">#{r.id}</td>
                   <td className="whitespace-nowrap px-3 py-3 text-zinc-200">{r.project}</td>
                   <td className="px-3 py-3 font-mono text-xs text-zinc-400">{r.build}</td>

@@ -13,10 +13,6 @@ html, body, #root { height: 100%; }
 body {
   margin: 0;
   background-color: var(--color-bg);
-  background-image:
-    radial-gradient(60rem 40rem at 85% -10%, rgb(139 92 246 / 0.16), transparent 60%),
-    radial-gradient(50rem 35rem at -10% 110%, rgb(217 70 239 / 0.08), transparent 60%);
-  background-attachment: fixed;
   color: #e4e4ef;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -27,21 +23,30 @@ body {
 
 * { scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 0.12) transparent; }
 
+/* Visible keyboard focus everywhere (accessibility). */
+:focus-visible {
+  outline: 2px solid rgb(167 139 250);
+  outline-offset: 2px;
+}
+
 @layer components {
+  /* Flat panel: hairline border, no blur, no glow. */
   .glass {
-    @apply rounded-2xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-xl;
-    box-shadow: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 20px 40px -24px rgb(0 0 0 / 0.6);
+    @apply rounded-md border border-white/[0.07] bg-[#11111a];
   }
-  .label { @apply text-[11px] font-medium uppercase tracking-[0.08em] text-zinc-500; }
+  .label { @apply font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-zinc-500; }
+  /* Mono eyebrow used for numbered page/section labels. */
+  .eyebrow { @apply font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-500; }
   .btn {
-    @apply inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm font-medium text-zinc-200 transition hover:border-white/15 hover:bg-white/[0.08] disabled:opacity-40 disabled:pointer-events-none;
+    @apply inline-flex items-center gap-2 rounded-md border border-white/[0.1] bg-transparent px-3 py-2 text-sm font-medium text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/[0.04] disabled:opacity-40 disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-900/40 transition hover:brightness-110;
+    @apply inline-flex items-center gap-2 rounded-md border border-violet-500 bg-violet-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-violet-400 hover:bg-violet-400 disabled:opacity-40 disabled:pointer-events-none;
   }
   .input {
-    @apply w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 outline-none transition focus:border-violet-500/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-violet-500/10;
+    @apply w-full rounded-md border border-white/[0.1] bg-[#0d0d14] px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 outline-none transition-colors focus:border-violet-400/70;
   }
+  .input:focus-visible { outline: none; box-shadow: 0 0 0 1px rgb(167 139 250 / 0.7); }
 }
 
 .shimmer {

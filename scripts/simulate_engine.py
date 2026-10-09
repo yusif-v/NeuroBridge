@@ -22,6 +22,20 @@ from sdk.buglens_client import BugLens  # noqa: E402
 
 PROJECT = "Dungeon Escape"
 
+# Ground truth: bugs deliberately planted in each build (sent to the QA scorecard).
+# "key-not-reset" is planted but this simulated engine never finds it, so the scorecard shows a miss.
+PLANTED = {
+    "wall": {"fingerprint": "collision-wall-clip", "title": "Player can walk through wall tiles",
+             "category": "collision", "severity": "high"},
+    "hp": {"fingerprint": "state-zero-hp", "title": "Game continues after HP reaches 0",
+           "category": "logic", "severity": "critical"},
+    "key": {"fingerprint": "inventory-key-not-reset", "title": "Key stays in inventory after restart",
+            "category": "inventory", "severity": "medium"},
+}
+
+# Simulated engine-LLM pricing so the Usage page has numbers. NOT real provider pricing.
+SIM_PRICE_IN, SIM_PRICE_OUT = 0.30, 2.50  # USD per 1M tokens
+
 MAP = [
     "##########",
     "#P..#...E#",
@@ -79,6 +93,8 @@ def pause(live: bool, lo=0.4, hi=1.2):
 def run_build(bl: BugLens, build: str, *, wall_bug: bool, hp_bug: bool, live: bool, agent="Explorer-LLM"):
     print(f"\n=== Run on build {build} ===")
     known = {b["fingerprint"]: b for b in bl.open_bugs(PROJECT)}
+    planted = [PLANTED["hp"], PLANTED["key"]] + ([PLANTED["wall"]] if wall_bug else [])
+    bl.known_issues(PROJECT, build, planted)
     passed = failed = 0
     with bl.run(PROJECT, build, agent=agent, engine="simulator", seed=random.randint(1, 9999)) as run:
         run.log(f"Session started on build {build}", level="info", map="dungeon_01")
@@ -171,8 +187,11 @@ def run_build(bl: BugLens, build: str, *, wall_bug: bool, hp_bug: bool, live: bo
         passed += 1
         run.log("Reached exit with key → VICTORY", level="info")
 
+        tin, tout = random.randint(40_000, 90_000), random.randint(3_000, 8_000)
         run.stats(tests_total=passed + failed, tests_passed=passed, tests_failed=failed,
-                  actions=random.randint(140, 260), duration_s=round(random.uniform(20, 45), 1))
+                  actions=random.randint(140, 260), duration_s=round(random.uniform(150, 260), 1),
+                  llm_input_tokens=tin, llm_output_tokens=tout,
+                  llm_cost_usd=round((tin * SIM_PRICE_IN + tout * SIM_PRICE_OUT) / 1e6, 5))
         run.summary = (f"Agent completed the dungeon on build {build}. "
                        f"{failed} failing checks, all rechecked before reporting.")
     print(f"  run #{run.id} finished: {passed} passed, {failed} failed")

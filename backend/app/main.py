@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import FRONTEND_DIST, MEDIA_DIR
 from .db import init_db
-from .routers import ingest, platform, reports, playtests
+from .routers import ingest, platform, reports, playtests, quality, usage
 
 
 @asynccontextmanager
@@ -24,6 +24,8 @@ app.include_router(ingest.router)
 app.include_router(platform.router)
 app.include_router(reports.router)
 app.include_router(playtests.router)
+app.include_router(quality.router)
+app.include_router(usage.router)
 
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")

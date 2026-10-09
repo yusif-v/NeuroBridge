@@ -42,6 +42,11 @@ def require(conn: sqlite3.Connection, table: str, row_id: int) -> dict:
     return row
 
 
+def add_event(conn, bug_id: int, type_: str, detail: str | None = None, run_id: int | None = None) -> None:
+    conn.execute("INSERT INTO bug_events (bug_id, run_id, type, detail, created_at) VALUES (?, ?, ?, ?, ?)",
+                 (bug_id, run_id, type_, detail, now()))
+
+
 def add_logs(conn, run_id: int, entries: list[LogEntry], bug_id: int | None = None) -> None:
     conn.executemany(
         "INSERT INTO logs (run_id, bug_id, ts, level, message, data) VALUES (?, ?, ?, ?, ?, ?)",
@@ -110,6 +115,7 @@ def upsert_bug(conn, run: dict, report: BugReport) -> tuple[int, bool]:
              run["build_id"], run["id"], run["id"], ts, ts),
         )
         bug_id, is_new = cur.lastrowid, True
+        add_event(conn, bug_id, "found", f"Reported by {report.agent or run['agent'] or 'engine'}", run["id"])
     else:
         bug_id, is_new = existing["id"], False
         # A previously fixed bug that shows up again is a regression: reopen and re-verify.
@@ -125,6 +131,10 @@ def upsert_bug(conn, run: dict, report: BugReport) -> tuple[int, bool]:
             (run["id"], run["build_id"], report.actual, ts, reopened, reopened, reopened, reopened,
              bug_id),
         )
+        if reopened:
+            add_event(conn, bug_id, "regression", "Previously fixed bug reported again", run["id"])
+        else:
+            add_event(conn, bug_id, "seen_again", f"Occurrence #{existing['occurrences'] + 1}", run["id"])
 
     add_logs(conn, run["id"], report.logs, bug_id=bug_id)
     add_screenshots(conn, report.screenshots, run_id=run["id"], bug_id=bug_id)
@@ -146,20 +156,28 @@ def apply_recheck(conn, bug: dict, report: RecheckReport) -> dict:
         (bug["id"], report.run_id, report.result, report.attempts, report.notes, ts),
     )
     recheck_id = cur.lastrowid
+    attempts = f" ({report.attempts} attempts)" if report.attempts else ""
+    add_event(conn, bug["id"], f"recheck_{report.result}", (report.notes or "") + attempts, report.run_id)
 
     if report.result == "reproduced":
         if bug["status"] == "fixed":
             conn.execute(
                 "UPDATE bugs SET verification='confirmed', status='open', regression=1, fixed_in_run=NULL,"
                 " updated_at=? WHERE id=?", (ts, bug["id"]))
+            add_event(conn, bug["id"], "regression", "Fixed bug reproduced again", report.run_id)
         else:
             conn.execute("UPDATE bugs SET verification='confirmed', updated_at=? WHERE id=?", (ts, bug["id"]))
+            if bug["verification"] != "confirmed":
+                add_event(conn, bug["id"], "confirmed", "Reproduced by recheck", report.run_id)
     elif bug["verification"] == "confirmed":
         conn.execute(
             "UPDATE bugs SET status='fixed', fixed_in_run=?, updated_at=? WHERE id=?",
             (report.run_id, ts, bug["id"]))
+        add_event(conn, bug["id"], "fixed", "Confirmed bug no longer reproduces", report.run_id)
     else:
         conn.execute("UPDATE bugs SET verification='not_reproduced', updated_at=? WHERE id=?", (ts, bug["id"]))
+        add_event(conn, bug["id"], "rejected", "Finding could not be reproduced; not counted as a bug",
+                  report.run_id)
 
     log_run = report.run_id or bug["last_run_id"]
     add_logs(conn, log_run, report.logs, bug_id=bug["id"])
@@ -201,6 +219,17 @@ def bug_detail(conn, bug_id: int) -> dict:
         "SELECT * FROM logs WHERE bug_id = ? ORDER BY ts, id", (bug_id,)))
     bug["rechecks"] = rows_to_dicts(conn.execute(
         "SELECT * FROM rechecks WHERE bug_id = ? ORDER BY id", (bug_id,)))
+    bug["timeline"] = rows_to_dicts(conn.execute(
+        """SELECT e.*, bl.version AS build FROM bug_events e
+           LEFT JOIN runs r ON r.id = e.run_id LEFT JOIN builds bl ON bl.id = r.build_id
+           WHERE e.bug_id = ? ORDER BY e.id""", (bug_id,)))
+    bug["ai_usage"] = rows_to_dicts(conn.execute(
+        "SELECT * FROM ai_usage WHERE bug_id = ? ORDER BY id", (bug_id,)))
+    planted = conn.execute(
+        """SELECT k.id, k.title, bl.version AS build FROM known_issues k JOIN builds bl ON bl.id = k.build_id
+           WHERE k.project_id = ? AND k.fingerprint = ? ORDER BY k.id""",
+        (bug["project_id"], bug["fingerprint"])).fetchall()
+    bug["planted_in"] = [dict(r) for r in planted]
     bug["runs"] = rows_to_dicts(conn.execute(
         """SELECT DISTINCT r.id, r.status, r.started_at, bl.version AS build FROM runs r
            JOIN builds bl ON bl.id = r.build_id
@@ -240,3 +269,12 @@ def run_detail(conn, run_id: int) -> dict:
     run["rechecks"] = rows_to_dicts(conn.execute(
         "SELECT * FROM rechecks WHERE run_id = ? ORDER BY id", (run_id,)))
     return run
+
+
+def bug_run_ids_sql(bug_col: str = "b.id") -> str:
+    """Subquery: every run in which a bug was reported, logged, screenshotted or rechecked."""
+    return f"""(SELECT run_id FROM logs WHERE bug_id = {bug_col}
+              UNION SELECT run_id FROM attachments WHERE bug_id = {bug_col}
+              UNION SELECT run_id FROM rechecks WHERE bug_id = {bug_col} AND run_id IS NOT NULL
+              UNION SELECT first_run_id FROM bugs WHERE id = {bug_col}
+              UNION SELECT last_run_id FROM bugs WHERE id = {bug_col})"""

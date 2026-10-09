@@ -5,7 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from ..ai_bridge import ai_enabled, mark_pending, run_analysis
 from ..db import DB, now, rows_to_dicts
 from ..schemas import BugUpdate
-from ..services import (BUG_LIST_SQL, RUN_LIST_SQL, bug_detail, decorate_bug, require,
+from ..services import (BUG_LIST_SQL, add_event, RUN_LIST_SQL, bug_detail, decorate_bug, require,
                         run_detail)
 
 router = APIRouter(prefix="/api/v1", tags=["platform"])
@@ -51,12 +51,15 @@ def get_bug(conn: DB, bug_id: int):
 
 @router.patch("/bugs/{bug_id}")
 def update_bug(conn: DB, bug_id: int, body: BugUpdate):
-    require(conn, "bugs", bug_id)
+    bug = require(conn, "bugs", bug_id)
     changes = body.model_dump(exclude_none=True)
     if not changes:
         raise HTTPException(422, "Nothing to update")
     sets = ", ".join(f"{k} = ?" for k in changes)
     conn.execute(f"UPDATE bugs SET {sets}, updated_at = ? WHERE id = ?", [*changes.values(), now(), bug_id])
+    for field, value in changes.items():
+        if bug[field] != value:
+            add_event(conn, bug_id, f"{field}_changed", f"{bug[field]} → {value} (by user)")
     return bug_detail(conn, bug_id)
 
 
@@ -113,7 +116,7 @@ def facets(conn: DB):
         "run": distinct("SELECT id FROM runs ORDER BY id DESC"),
         "severity": ["critical", "high", "medium", "low"],
         "category": distinct("SELECT DISTINCT category FROM bugs ORDER BY category"),
-        "status": ["open", "ticketed", "fixed", "ignored"],
+        "status": ["open", "ticketed", "fixed", "ignored", "false_positive"],
         "verification": ["unverified", "confirmed", "not_reproduced"],
         "test": distinct("SELECT DISTINCT test_name FROM bugs ORDER BY test_name"),
         "agent": distinct("SELECT DISTINCT agent FROM bugs ORDER BY agent"),
@@ -141,6 +144,7 @@ def stats(conn: DB):
             "unverified": one("SELECT COUNT(*) FROM bugs WHERE verification = 'unverified'"),
             "not_reproduced": one("SELECT COUNT(*) FROM bugs WHERE verification = 'not_reproduced'"),
             "fixed": one("SELECT COUNT(*) FROM bugs WHERE status = 'fixed'"),
+            "false_positives": one("SELECT COUNT(*) FROM bugs WHERE status = 'false_positive'"),
             "regressions": one("SELECT COUNT(*) FROM bugs WHERE regression = 1"),
             "critical_open": one("SELECT COUNT(*) FROM bugs WHERE status = 'open' AND verification = 'confirmed'"
                                  " AND severity = 'critical'"),

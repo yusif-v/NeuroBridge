@@ -38,3 +38,25 @@ export function duration(start: string, end: string | null, reportedSeconds?: un
 }
 
 export const LIVE_MS = 3000
+
+export function pct(x: number | null | undefined, digits = 0) {
+  return x == null ? '—' : `${(x * 100).toFixed(digits)}%`
+}
+
+export function usd(x: number | null | undefined) {
+  if (x == null) return '—'
+  if (x === 0) return '$0'
+  if (Math.abs(x) < 0.01) return `$${x.toFixed(4)}`
+  if (Math.abs(x) < 100) return `$${x.toFixed(2)}`
+  return `$${Math.round(x).toLocaleString()}`
+}
+
+export function compact(n: number | null | undefined) {
+  if (n == null) return '—'
+  return Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(n)
+}
+
+export function humanize(s: string) {
+  const t = s.replace(/_/g, ' ')
+  return t[0].toUpperCase() + t.slice(1)
+}
