@@ -87,7 +87,8 @@ running the scene generator overwrites those scene edits.
 3. Choose **Export Project**, disable **Export With Debug**, and save to
    `builds/windows/MossAndEmber.exe`. Create the directory if necessary.
 4. The preset embeds the PCK in the executable. Distribute the resulting EXE
-   along with appropriate Godot third-party license notices.
+   together with `LICENSE.txt`, `GODOT_LICENSE.txt` and `GODOT_COPYRIGHT.txt`.
+   The bundled Godot notices match 4.6.2; update them when changing engine version.
 
 CLI equivalent with matching templates installed:
 

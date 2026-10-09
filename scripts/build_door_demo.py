@@ -54,6 +54,9 @@ def main():
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as bundle:
         bundle.write(binary, binary.name)
         bundle.write(pack, pack.name)
+        bundle.write(root / 'LICENSE', 'NEUROBRIDGE_LICENSE.txt')
+        for filename in ('LICENSE.txt', 'GODOT_LICENSE.txt', 'GODOT_COPYRIGHT.txt'):
+            bundle.write(root / 'game' / filename, filename)
     print(archive)
 
 

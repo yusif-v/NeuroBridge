@@ -173,6 +173,13 @@ The normal game and deliberately faulty QA fixtures are separate. The game is a 
 
 The platform uses **React + TypeScript**, **FastAPI**, **SQLite**, **Docker**, **CUDA Laya**, and a separate multimodal report API. The code is organized into [frontend/](frontend/), [backend/](backend/), [ai/](ai/), [sandbox/](sandbox/) and [tests/](tests/).
 
+## License
+
+Original project code and documentation are available under the [MIT License](LICENSE).
+Moss & Ember's original assets retain their [game license](game/LICENSE.txt).
+Dependencies, fonts and pretrained models retain their own licenses; see
+[Third-party notices](THIRD_PARTY_NOTICES.md) for attribution and distribution notes.
+
 ---
 
 <p align="center"><strong>Play the build. Reproduce the failure. Review the evidence.</strong></p>
