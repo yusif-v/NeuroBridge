@@ -1,0 +1,11 @@
+.godot/
+.tools/
+builds/
+*.tmp
+qa/runs/
+deliverables/
+Godot_v4.bin
+Godot_*.zip
+*.crdownload
+__pycache__/
+*.pyc

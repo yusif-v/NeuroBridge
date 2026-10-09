@@ -1,0 +1,41 @@
+; Moss & Ember — Godot 4 project
+config_version=5
+
+[application]
+config/name="Moss & Ember"
+run/main_scene="res://scenes/level.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://assets/icon.png"
+
+[display]
+window/size/viewport_width=768
+window/size/viewport_height=432
+window/size/window_width_override=1536
+window/size/window_height_override=864
+window/stretch/mode="canvas_items"
+window/stretch/scale_mode="integer"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+textures/canvas_textures/default_texture_filter=0
+environment/defaults/default_clear_color=Color(0.028, 0.075, 0.09, 1)
+
+[physics]
+common/physics_ticks_per_second=60
+
+[layer_names]
+2d_physics/layer_1="Stone and moving platforms"
+2d_physics/layer_2="Adventurer"
+2d_physics/layer_3="Pushable crates"
+
+[input]
+move_left={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":65), Object(InputEventKey,"physical_keycode":4194321)]}
+move_right={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":68), Object(InputEventKey,"physical_keycode":4194323)]}
+climb_up={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":87), Object(InputEventKey,"physical_keycode":4194320)]}
+climb_down={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":83), Object(InputEventKey,"physical_keycode":4194322)]}
+jump={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":32)]}
+interact={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":69)]}
+restart={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":82)]}
+pause={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194305)]}
