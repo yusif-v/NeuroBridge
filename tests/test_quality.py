@@ -80,4 +80,5 @@ def test_ai_usage_recorded(client, monkeypatch):
     assert detail["ai_status"] == "done" and "usage" not in detail["ai_report"]
     usage = client.get("/api/v1/usage").json()
     assert usage["ai"]["calls"] == 1 and usage["ai"]["cost_usd"] == 0.002
-    assert usage["unit"]["cost_per_confirmed_bug_usd"] == 0.002
+    assert usage["unit"]["known_cost_usd"] == 0.002
+    assert usage["unit"]["cost_per_confirmed_bug_usd"] is None  # external engine cost was never supplied

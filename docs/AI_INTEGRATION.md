@@ -59,6 +59,27 @@ HTML, Markdown and JSON exports include the AI report, reproduction steps and
 evidence references. Provider token counts and latency are recorded. Cost remains
 unknown unless provider pricing is explicitly configured; no rate is assumed.
 
+## Usage dashboard
+
+`/app/usage` reads persisted API calls, runs and sandbox jobs. Unknown prices
+remain `null` / **Unknown**, including failed calls that may still be billed.
+Known charges are a partial subtotal when records are incomplete; per-run and
+per-bug API costs are available only with complete cost coverage. No monthly
+projection or default provider rate is used. Local Laya sessions incur no play
+API charge, but GPU hosting and electricity costs are not measured.
+
+Token counts come from provider responses, including invalid/truncated reports
+that return usage. Failure records retain the requested model for future calls.
+Historical missing tokens/models are not invented. Configured token rates apply
+to new calls; explicit zero rates are supported and differ from missing rates.
+
+Actions use the persisted worker decision count, including inconclusive and
+failed sessions. Duration uses reported stats or recorded start/finish times;
+worker session elapsed includes startup and independent replay, excludes queued
+time and separate API analysis, and is not pure gameplay time. Unfinished or
+missing durations remain unavailable. The token chart omits runs with no complete
+provider token record.
+
 To test on real evidence, open a confirmed dungeon door-rule finding and press
 Analyze. New confirmed upload findings trigger analysis automatically. The API
 boundary and lifecycle tests use mocked transport and explicitly disable private

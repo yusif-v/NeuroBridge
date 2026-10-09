@@ -344,27 +344,35 @@ export interface Usage {
     bugs_analyzed: number
     input_tokens: number
     output_tokens: number
-    cost_usd: number
+    cost_usd: number | null
+    known_cost_usd: number
+    calls_without_tokens: number
     calls_without_cost: number
     avg_latency_ms: number | null
     cost_per_analysis_usd: number | null
   }
   engine: {
     runs: number
-    llm_cost_usd: number
+    local_runs: number
+    llm_cost_usd: number | null
+    known_cost_usd: number
+    runs_without_cost: number
     llm_input_tokens: number
     llm_output_tokens: number
     play_minutes: number
+    runs_with_duration: number
     actions: number
+    runs_without_actions: number
   }
   unit: {
-    total_cost_usd: number
+    total_cost_usd: number | null
+    known_cost_usd: number
     cost_per_run_usd: number | null
     cost_per_confirmed_bug_usd: number | null
     confirmed_bugs: number
   }
-  per_run: { run_id: number; build: string; started_at: string; engine_cost_usd: number; ai_cost_usd: number; ai_calls: number; new_bugs: number }[]
-  by_model: { model: string; calls: number; input_tokens: number; output_tokens: number; cost_usd: number }[]
+  per_run: { run_id: number; project: string; build: string; started_at: string | null; status: string; local: boolean; model: string | null; duration_s: number | null; duration_source: string | null; actions: number | null; engine_cost_usd: number | null; ai_cost_usd: number | null; ai_calls: number; calls_without_tokens: number; input_tokens: number; output_tokens: number; new_bugs: number }[]
+  by_model: { model: string; calls: number; input_tokens: number; output_tokens: number; calls_without_tokens: number; cost_usd: number | null; known_cost_usd: number; without_cost: number }[]
   recent_calls: (AIUsageRow & { title: string; project: string })[]
   pricing: { input_per_mtok_usd: number | null; output_per_mtok_usd: number | null }
 }

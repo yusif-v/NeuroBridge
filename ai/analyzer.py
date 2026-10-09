@@ -120,6 +120,14 @@ def _payload(evidence, model):
             'schema': {**AI_REPORT_JSON_SCHEMA, 'additionalProperties': False}}}}
 
 
+class AnalysisError(RuntimeError):
+    """An invalid report can still be a billable provider response."""
+
+    def __init__(self, message, usage):
+        super().__init__(message)
+        self.usage = usage
+
+
 def analyze_bug(evidence: dict) -> dict:
     base, key, model = settings()
     if not is_enabled():
@@ -141,24 +149,25 @@ def analyze_bug(evidence: dict) -> dict:
     if response.status_code != 200:
         # Provider response bodies can echo request credentials; never persist them.
         raise RuntimeError(f'AI provider returned HTTP {response.status_code}. Check model, credentials and gateway status.')
+    usage = {'model': model}
     try:
         body = response.json()
+        raw_usage = body.get('usage') or {}
+        usage.update(input_tokens=raw_usage.get('prompt_tokens'), output_tokens=raw_usage.get('completion_tokens'))
         choice = body['choices'][0]
         if choice.get('finish_reason') == 'length':
-            raise RuntimeError('AI output reached the token limit before completing the report.')
+            raise AnalysisError('AI output reached the token limit before completing the report.', usage)
         message = choice['message']
         if message.get('refusal'):
-            raise RuntimeError('AI provider declined this evidence analysis.')
+            raise AnalysisError('AI provider declined this evidence analysis.', usage)
         content = message['content'].strip()
         # Some compatible gateways do not forward response_format and add fences.
         fenced = re.fullmatch(r'```(?:json)?\s*(.*?)\s*```', content, flags=re.S)
         if fenced:
             content = fenced.group(1)
         report = AnalysisReport.model_validate(json.loads(content), strict=True).model_dump()
-    except (ValueError, KeyError, IndexError, TypeError):
-        raise RuntimeError('AI provider returned an invalid structured bug report. Retry analysis.') from None
-    usage = body.get('usage') or {}
+    except (ValueError, KeyError, IndexError, TypeError, AttributeError):
+        raise AnalysisError('AI provider returned an invalid structured bug report. Retry analysis.', usage) from None
     report['model'] = model
-    report['usage'] = {'model': model, 'input_tokens': usage.get('prompt_tokens'),
-                       'output_tokens': usage.get('completion_tokens')}
+    report['usage'] = usage
     return report

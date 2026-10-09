@@ -76,8 +76,25 @@ def test_provider_errors_do_not_store_credentials_or_fake_a_report(monkeypatch, 
 def test_incomplete_or_unvalidated_model_output_is_rejected(monkeypatch, body):
     configure(monkeypatch)
     mock_provider(monkeypatch, lambda request: httpx.Response(200, json=body))
-    with pytest.raises(RuntimeError):
+    with pytest.raises(analyzer.AnalysisError) as error:
         analyzer.analyze_bug({})
+    assert error.value.usage['input_tokens'] == 1200
+    assert error.value.usage['output_tokens'] == 350
+    assert error.value.usage['model'] == 'cx/gpt-6.1-sol(high)'
+
+
+def test_failed_report_retains_real_provider_usage(client, monkeypatch):
+    from backend.app.ai_bridge import run_analysis
+    from test_platform import start, BUG
+    configure(monkeypatch)
+    mock_provider(monkeypatch, lambda request: httpx.Response(200, json=completion({'summary': 'Incomplete'})))
+    run = start(client)
+    bug = client.post(f'/api/v1/ingest/runs/{run}/bugs', json=BUG).json()['bug_id']
+    run_analysis(bug)
+    u = client.get('/api/v1/usage').json()
+    assert u['ai']['failed'] == 1 and u['ai']['input_tokens'] == 1200
+    assert u['recent_calls'][0]['model'] == 'cx/gpt-6.1-sol(high)'
+    assert u['recent_calls'][0]['cost_usd'] is None
 
 
 def test_images_outside_evidence_store_are_not_read(client, monkeypatch, tmp_path):
