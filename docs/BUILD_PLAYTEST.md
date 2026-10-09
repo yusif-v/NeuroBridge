@@ -24,8 +24,8 @@ events. Job URLs preserve the selected test when refreshing the page.
 8. In a separate terminal: `python -m backend.app.worker`.
 9. Visit `http://localhost:8000/playtest`, upload a build and describe its controls.
 
-The worker reads variables inherited from its shell; Uvicorn's `--env-file`
-only configures the API. Uploading before the worker starts leaves the job queued.
+Both API and worker load the repository's ignored `.env` without overriding shell
+variables. Uploading before the worker starts leaves the job queued.
 Stop cancels exploration; the worker removes its container at the next checkpoint.
 
 ## Build the dungeon for Linux
@@ -65,7 +65,12 @@ A candidate's input sequence is replayed in a **fresh container**. Only the same
 second observation confirms it. Both screenshots and the reproduction result are
 stored in Bugs/Reports. Action probabilities are model scores, not proof of a bug.
 The **Download runtime output** link exposes captured application output. The
-existing optional report-explanation analyzer is separate from CUDA Laya gameplay.
+report-explanation analyzer is separate from CUDA Laya gameplay. Set the server-side
+`AI_API_BASE_URL`, `AI_API_KEY` and `AI_MODEL` in `.env` to enable multimodal API
+analysis after fresh replay confirmation. The trusted host sends screenshots,
+logs and replay evidence to that configured service; the game container remains
+offline. See [AI integration](AI_INTEGRATION.md). Analysis failure does not change
+the independently verified bug, and the bug panel provides Retry.
 
 ## Gameplay logic demo: exit opens without the key
 

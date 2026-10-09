@@ -1,4 +1,4 @@
-"""Runs the AI teammate's analyzer in the background and stores the result."""
+"""Runs the evidence analyzer in the background and stores the result."""
 
 import logging
 import time
@@ -26,8 +26,22 @@ def build_evidence(bug: dict) -> dict:
     ev = {k: bug.get(k) for k in keys}
     ev["logs"] = [{k: l[k] for k in ("ts", "level", "message", "data")} for l in bug["logs"]]
     ev["rechecks"] = [{k: r[k] for k in ("result", "attempts", "notes", "created_at")} for r in bug["rechecks"]]
-    ev["screenshots"] = [str(MEDIA_DIR / a["filename"]) for a in bug["attachments"]]
+    screenshots = [a for a in bug["attachments"] if a["mime"].startswith('image/')]
+    ev["screenshots"] = [str(MEDIA_DIR / a["filename"]) for a in screenshots]
+    ev["screenshot_refs"] = [{'ref': f'screenshot:{a["id"]}', 'caption': a['caption'] or 'Captured evidence'} for a in screenshots]
     return ev
+
+
+def analyze_confirmed(bug_id: int) -> None:
+    """Worker entry point; atomically claim analysis only after replay confirmation."""
+    with connect() as conn:
+        conn.execute('BEGIN IMMEDIATE')
+        bug = conn.execute('SELECT verification,ai_status FROM bugs WHERE id=?', (bug_id,)).fetchone()
+        if not bug or bug['verification'] != 'confirmed' or bug['ai_status'] in ('pending', 'done'):
+            return
+        scheduled = mark_pending(conn, bug_id)
+    if scheduled:
+        run_analysis(bug_id)
 
 
 def mark_pending(conn, bug_id: int) -> bool:
@@ -49,7 +63,14 @@ def _cost(usage: dict) -> float | None:
 def run_analysis(bug_id: int) -> None:
     with connect() as conn:
         bug = bug_detail(conn, bug_id)
+        run_logs = conn.execute('SELECT ts,level,message,data FROM logs WHERE run_id=? ORDER BY id DESC LIMIT 60',
+                                (bug['last_run_id'],)).fetchall()
+        job = conn.execute('SELECT filename,objective,rule FROM playtest_jobs WHERE run_id=?',
+                           (bug['last_run_id'],)).fetchone()
     evidence = build_evidence(bug)
+    evidence['run_logs'] = [dict(row) for row in reversed(run_logs)]
+    if job:
+        evidence['test_context'] = dict(job)
     started = time.perf_counter()
     try:
         report, status, error = analyzer.analyze_bug(evidence), "done", None

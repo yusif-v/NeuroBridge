@@ -41,7 +41,15 @@ def _bug_md(bug: dict) -> list[str]:
         out += ["", "**AI analysis (hypothesis, not verified):**", ai.get("summary", ""), "",
                 f"- Likely root cause: {ai.get('likely_root_cause', '-')}",
                 f"- Recommended fix: {ai.get('recommended_fix', '-')}",
-                f"- Confidence: {ai.get('confidence', '-')}"]
+                f"- Confidence: {ai.get('confidence', '-')}",
+                f"- Suggested severity: {ai.get('severity', '-')}",
+                f"- Model: {ai.get('model', '-')}"]
+        if ai.get('insufficient_evidence'):
+            out += ['', '**Insufficient evidence:** this analysis cannot establish the reported behavior.']
+        if ai.get('reproduction_steps'):
+            out += ['', '**AI reproduction steps:**', *[f'{i}. {step}' for i, step in enumerate(ai['reproduction_steps'], 1)]]
+        if ai.get('evidence_refs'):
+            out += ['', '**AI evidence references:**', *[f'- {ref}' for ref in ai['evidence_refs']]]
     if bug.get("logs"):
         out += ["", "<details><summary>Logs</summary>", "", "```"]
         out += [f"{l['ts']} [{l['level']}] {l['message']}" for l in bug["logs"]]
@@ -98,10 +106,16 @@ def _bug_html(bug: dict) -> str:
     ai = bug.get("ai_report") or {}
     ai_html = ""
     if bug.get("ai_status") == "done":
+        ai_steps = ''.join(f'<li>{e(step)}</li>' for step in ai.get('reproduction_steps') or [])
+        ai_refs = ''.join(f'<li>{e(ref)}</li>' for ref in ai.get('evidence_refs') or [])
+        insufficient = '<p><b>Insufficient evidence:</b> the reported behavior is not established.</p>' if ai.get('insufficient_evidence') else ''
         ai_html = (f'<div class="ai"><h4>AI analysis <span>hypothesis · not verified</span></h4>'
                    f'<p>{e(ai.get("summary"))}</p><p><b>Likely root cause:</b> {e(ai.get("likely_root_cause"))}</p>'
                    f'<p><b>Recommended fix:</b> {e(ai.get("recommended_fix"))}</p>'
-                   f'<p><b>Confidence:</b> {e(ai.get("confidence"))}</p></div>')
+                   f'<p><b>Confidence:</b> {e(ai.get("confidence"))} · <b>Suggested severity:</b> {e(ai.get("severity"))}</p>'
+                   f'<p><b>Model:</b> {e(ai.get("model"))}</p>{insufficient}'
+                   f'<h4>AI reproduction steps</h4><ol>{ai_steps}</ol>'
+                   f'<h4>AI evidence references</h4><ul>{ai_refs}</ul></div>')
     color = SEV_COLOR.get(bug["severity"], "#94a3b8")
     return f"""
 <section class="bug">

@@ -65,7 +65,10 @@ def update_bug(conn: DB, bug_id: int, body: BugUpdate):
 
 @router.post("/bugs/{bug_id}/analyze", status_code=202)
 def analyze(conn: DB, bug_id: int, tasks: BackgroundTasks):
-    require(conn, "bugs", bug_id)
+    conn.execute('BEGIN IMMEDIATE')
+    bug = require(conn, "bugs", bug_id)
+    if bug['ai_status'] == 'pending':
+        return {"bug_id": bug_id, "ai_status": "pending"}
     if not mark_pending(conn, bug_id):
         raise HTTPException(503, "AI analyzer is not configured")
     conn.commit()

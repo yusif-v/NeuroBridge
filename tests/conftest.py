@@ -4,6 +4,12 @@ from pathlib import Path
 
 import pytest
 
+
+@pytest.fixture(autouse=True)
+def no_live_ai_credentials(monkeypatch):
+    # Tests must never use a developer's private .env key or spend API credits.
+    monkeypatch.setenv('AI_API_KEY', '')
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 

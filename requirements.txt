@@ -1,6 +1,7 @@
 fastapi>=0.121
 uvicorn[standard]
 pydantic
+python-dotenv>=1.0
 python-multipart>=0.0.20
 pytest
 httpx

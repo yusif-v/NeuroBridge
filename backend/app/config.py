@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(ROOT / '.env', override=False)
 DATA_DIR = Path(os.getenv("BUGLENS_DATA_DIR", ROOT / "data")).resolve()
 DB_PATH = DATA_DIR / "buglens.db"
 MEDIA_DIR = DATA_DIR / "media"

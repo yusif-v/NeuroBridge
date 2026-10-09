@@ -45,6 +45,9 @@ export function PlaytestPage() {
     upload.mutate(body)
   }
   const current = job.data
+  const report = useQuery({ queryKey: ['bug', current?.result?.bug_id],
+    queryFn: () => api.bug(current!.result!.bug_id!), enabled: !!current?.result?.bug_id,
+    refetchInterval: (query) => query.state.data?.ai_status === 'pending' || query.state.data?.ai_status === 'none' ? 2000 : false })
   const live = !!current && ACTIVE.includes(current.status)
   const events = current?.events ?? []
   const latestDecision = events.find(e => e.data?.probabilities)
@@ -103,6 +106,9 @@ export function PlaytestPage() {
             {current.result && <div className="glass p-4">
               {!!current.result.confirmed_bugs && <><p className="mb-1 font-mono text-xs uppercase tracking-wider text-emerald-300">{observedFinding?.category === 'logic' ? 'Confirmed logic bug' : 'Confirmed finding'} · fresh sandbox replay</p><p className="mb-2 text-base font-semibold text-white">{observedFinding?.title ?? 'Reproducible failure detected'}</p></>}
               <p className="text-sm text-zinc-200">{current.result.summary ?? current.result.coverage}</p>
+              {report.data?.ai_status === 'pending' && <p className="mt-3 flex items-center gap-2 text-sm text-violet-300"><LoaderCircle className="size-4 animate-spin" />AI is analyzing screenshots and replay evidence…</p>}
+              {report.data?.ai_status === 'done' && <div className="mt-3 border-t border-white/5 pt-3"><p className="mb-1 font-mono text-xs text-violet-300">AI report ready · {report.data.ai_report?.model}</p><p className="text-sm leading-relaxed text-zinc-400">{report.data.ai_report?.summary}</p></div>}
+              {report.data?.ai_status === 'error' && <p className="mt-3 text-xs text-rose-300">AI analysis failed. Open the bug report to retry. Replay confirmation is preserved.</p>}
               <div className="mt-3 flex flex-wrap gap-4">{current.result.bug_id && <Link className="inline-flex items-center gap-1 text-sm text-amber-300" to={`/app/bugs?bug=${current.result.bug_id}&run=${current.run_id}`}>View bug #{current.result.bug_id} & screenshots<ArrowUpRight className="size-4" /></Link>}
                 <Link className="inline-flex items-center gap-1 text-sm text-zinc-400" to={`/app/runs/${current.run_id}`}>Open run report<ArrowUpRight className="size-4" /></Link></div>
             </div>}

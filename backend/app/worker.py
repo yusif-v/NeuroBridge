@@ -13,6 +13,7 @@ from .sandbox import Sandbox, ready
 from .schemas import BugReport, LogEntry, RecheckReport
 from .services import add_attachment, add_logs, apply_recheck, require, store_image, upsert_bug
 from .uploads import validate_executable
+from .ai_bridge import analyze_confirmed, ai_enabled
 
 ACTIONS = {
     'move_left': 'A: move left.', 'move_right': 'D: move right.',
@@ -228,6 +229,10 @@ def run_job(job, agent):
         with connect() as conn:
             conn.execute("UPDATE runs SET status='completed',summary=?,stats=?,finished_at=? WHERE id=? AND status='running'",
                          (result['summary'], dumps(result), now(), job['run_id']))
+        if result['confirmed_bugs'] and ai_enabled():
+            # API analysis uses committed screenshots/replay evidence and does not
+            # hold the GPU queue or change the independent confirmation result.
+            threading.Thread(target=analyze_confirmed, args=(result['bug_id'],), daemon=True).start()
     except Exception as exc:
         result['error'] = str(exc)
         update(job['id'], status='inconclusive' if isinstance(exc, TimeoutError) else 'environment_error',

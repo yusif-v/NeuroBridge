@@ -38,7 +38,7 @@ Reset data: stop the backend and delete `data/buglens.db` and `data/media/`.
 
 ```
 backend/app/      FastAPI: ingest API (engine), platform API (UI), reports, SQLite
-ai/               AI plug-in (analyzer.py, schema.py) — AI teammate
+ai/               Multimodal API report analyzer (analyzer.py, schema.py)
 sdk/              buglens_client.py — stdlib client for the game engine
 scripts/          simulate_engine.py — fake engine for demos/dev
 frontend/         React + Vite + Tailwind web platform
