@@ -22,8 +22,8 @@ def main():
     write_status(args.status, 'loading', 'Laya CUDA modeli yüklənir… Test pəncərəsi bir azdan açılacaq.')
     runner = Path(__file__).resolve().with_name('run_laya.py')
     command = [sys.executable, '-u', str(runner), '--godot', args.godot,
-               '--device', 'cuda', '--demo', '--keep-open', '--speed', '0.75',
-               '--decision-delay', '0.7', '--launcher-status', str(args.status)]
+               '--device', 'cuda', '--demo', '--keep-open', '--speed', '1.5',
+               '--decision-delay', '0', '--launcher-status', str(args.status)]
     try:
         with args.status.with_suffix('.log').open('w', encoding='utf-8') as log:
             result = subprocess.run(command, cwd=runner.parent.parent, stdout=log, stderr=subprocess.STDOUT)

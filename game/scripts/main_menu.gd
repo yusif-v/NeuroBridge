@@ -89,7 +89,7 @@ func _build_menu() -> void:
 	laya_button.name = "LayaDemo"
 	laya_button.pressed.connect(start_laya)
 	_label("AI oynasın. Qərarlarını izlə.", Rect2(412, 216, 302, 26), 17, "eee0b3")
-	_label("CUDA modeli • 0.75× sürət\nSonda qəsdən əlavə edilmiş qapı bugı.", Rect2(412, 248, 302, 48), 14)
+	_label("CUDA modeli • 1.5× sürət\nSonda qəsdən əlavə edilmiş qapı bugı.", Rect2(412, 248, 302, 48), 14)
 	status = _label("Rejimi seç. Laya testi ayrıca oyun pəncərəsində açılır.", Rect2(38, 322, 694, 56), 14)
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var quit_button := _button("ÇIXIŞ", Rect2(596, 385, 136, 32))

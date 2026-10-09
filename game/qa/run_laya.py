@@ -31,7 +31,7 @@ ACTIONS = {
 }
 
 class Bridge:
-    def __init__(self, engine, folder, headless, fault, speed=0.75, decision_delay=0.7):
+    def __init__(self, engine, folder, headless, fault, speed=1.5, decision_delay=0.0):
         self.folder, self.counter = folder, 0
         self.decision_delay=0.0 if headless else decision_delay
         self.log = open(folder/'godot.log', 'w', encoding='utf-8')
@@ -158,13 +158,13 @@ def movement_question(step, state):
 
 def action_command(choice, step, state, target):
     kind = step['kind']
-    command = {'kind':'action','actions':ACTIONS[choice], 'frames':12}
+    command = {'kind':'action','actions':ACTIONS[choice], 'frames':24}
     if choice in ('jump_left','jump_right'):
         command.update(frames=55, stop_x=target)
         step['started'] = True
     elif choice in ('move_left','move_right') and kind in ('move','jump'):
         distance = abs(state['player']['position']['x']-target)
-        command.update(frames=max(2,min(12,math.ceil(distance/145*60))), stop_x=target)
+        command.update(frames=max(2,min(24,math.ceil(distance/145*60))), stop_x=target)
     elif choice == 'wait': command['frames'] = 18
     elif choice == 'interact': command['frames'] = 3
     return command
@@ -195,8 +195,8 @@ def main():
     parser.add_argument('--device', default='cuda', choices=['cuda','cpu'])
     parser.add_argument('--godot', type=Path, help='Godot 4 executable; also found via GODOT_BIN or PATH.')
     parser.add_argument('--headless', action='store_true')
-    parser.add_argument('--speed',type=float,default=0.75,help='Visible game playback speed, default 0.75.')
-    parser.add_argument('--decision-delay',type=float,default=0.7,help='Real seconds to read each model decision before its action.')
+    parser.add_argument('--speed',type=float,default=1.5,help='Visible game playback speed, default 1.5.')
+    parser.add_argument('--decision-delay',type=float,default=0.0,help='Optional real seconds to read each model decision; default has no added pause.')
     parser.add_argument('--fault', default='none', choices=['none','door_without_key','ladder_down_blocked'])
     parser.add_argument('--max-decisions', type=int, default=180)
     parser.add_argument('--probes-only', action='store_true')

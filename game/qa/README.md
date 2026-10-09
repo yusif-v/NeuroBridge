@@ -24,9 +24,11 @@ qayda yoxlamaları və qəsdən əlavə edilmiş qapı bugı göstərilir, nəti
 nümayişi üçün `--probes-only` seçimini əlavə edin. Normal oyunu qəsdən bug
 əlavə etmədən test etmək üçün `RunLayaQA.cmd` istifadə edin.
 
-Görünən demo standart olaraq **normal oyun sürətinin 75%-i** ilə oynayır (`--speed 0.75`).
-Hər yeni qərar əvvəl iri Azərbaycan dilində başlıqda göstərilir; hərəkətə
-başlamazdan əvvəl **0.7 saniyə** dünya donur ki, düyməni və məqsədi oxuya biləsən.
+Görünən demo standart olaraq **normal oyundan 1.5 dəfə sürətli** oynayır (`--speed 1.5`).
+Hər yeni qərar iri Azərbaycan dilində başlıqda göstərilir; standart rejimdə
+oxumaq üçün məcburi fasilə yoxdur. Eyni istiqamətdə hərəkət blokları uzadılıb
+ki, model qərarları arasında dayanma daha az olsun. Dünya yalnız həqiqi model
+inference-i zamanı qısa müddət donur; hərəkətlərdə əlavə 0.35 saniyə fasilə yoxdur.
 Məlumat paneli aşağı sağdadır və sol nərdivəni/oyunçunu örtmür. Hər fizika addımı
 yenə 1/60 oyun saniyəsidir, ona görə yoxlanılmış tullanışlar qorunur.
 `--decision-delay 2 --speed 0.25` daha yavaş nümayiş edir.

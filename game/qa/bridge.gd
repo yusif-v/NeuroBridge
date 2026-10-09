@@ -11,8 +11,8 @@ var status_label: Label
 var action_caption: Label
 var last_probe: Dictionary = {}
 var decision_history: Array[String] = []
-var speed: float = 0.75
-var decision_hold: float = 0.7
+var speed: float = 1.5
+var decision_hold: float = 0.0
 var evidence_panel: ColorRect
 var evidence_title: Label
 var evidence_detail: Label
@@ -27,7 +27,7 @@ func _initialize() -> void:
 		if args[i] == "--fault" and i + 1 < args.size():
 			fault = args[i + 1]
 		if args[i] == "--speed" and i + 1 < args.size():
-			speed = clampf(float(args[i + 1]), 0.25, 1.0)
+			speed = clampf(float(args[i + 1]), 0.25, 2.0)
 		if args[i] == "--decision-hold" and i + 1 < args.size():
 			decision_hold = clampf(float(args[i + 1]), 0.0, 5.0)
 	if session_dir.is_empty():
@@ -40,7 +40,10 @@ func _initialize() -> void:
 		# simulated second, preserving the validated jumps while slowing playback.
 		Engine.time_scale = speed
 		Engine.physics_ticks_per_second = roundi(60.0 * speed)
-		Engine.max_fps = 60
+		Engine.max_fps = maxi(60, Engine.physics_ticks_per_second)
+		if Engine.physics_ticks_per_second > 60:
+			# Keep frame-based QA actions at one rendered frame per physics tick.
+			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	_run.call_deferred()
 	root.title = "Moss & Ember | Laya CUDA Playtester"
 
@@ -161,7 +164,7 @@ func _run() -> void:
 			status_label.text += entry + "\n"
 		_show_action(value)
 		# Show the new model decision before moving, using a real-time pause.
-		if value.has("inference_ms") and value.get("kind", "") in ["action", "probe"]:
+		if decision_hold > 0.0 and value.has("inference_ms") and value.get("kind", "") in ["action", "probe"]:
 			await _hold_visible(decision_hold)
 		if value.get("kind", "") == "message":
 			await _hold_visible(float(value.get("hold_seconds", 6.0)))
